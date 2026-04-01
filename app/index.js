@@ -1,56 +1,31 @@
-const { PrismaClient } = require('@prisma/client');
-const { PrismaPg }= require('@prisma/adapter-pg');
-const { createClient } = require('redis');
+const http = require('http');
+const url = require('url');
+const router = require('./router');
 
-// const prisma = new PrismaClient();
-const prisma = new PrismaClient({
-  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL })
-})
+const fs = require('fs');
+const path = require('path');
 
-async function main() {
-    console.log('🔄 Починаємо перевірку підключень...\n');
+const docsDir = path.join(__dirname, 'storage');
 
-    // --- 1. ПЕРЕВІРКА REDIS ---
-    // Використовуємо внутрішнє ім'я контейнера 'redis' як хост
-    const redisClient = createClient({
-        url: 'redis://redis:6379'
-    });
+if (!fs.existsSync(docsDir)) {
+  fs.mkdirSync(docsDir, { recursive: true });
+} 
 
-    redisClient.on('error', (err) => console.log('❌ Помилка Redis:', err));
+http.createServer((req, res) => {
+  const parsedUrl = url.parse(req.url, true);
+  req.pathname = parsedUrl.pathname;
+  req.query = parsedUrl.query;
 
-    await redisClient.connect();
-    console.log('✅ Успішно підключено до Redis!');
+  for (const route of router) {
+    if (req.method === route.method && route.path.test(req.pathname)) {
+      const params = req.pathname.match(route.path);
+      req.params = params?.slice(1);
+      return route.handler(req, res);
+    }
+  }
 
-    // Записуємо та читаємо тестове значення
-    await redisClient.set('course_topic', 'Node.js & Docker Integration');
-    const redisValue = await redisClient.get('course_topic');
-    console.log(`📦 Отримано з Redis: ${redisValue}\n`);
-
-
-    // --- 2. ПЕРЕВІРКА POSTGRES (PRISMA) ---
-    console.log('⏳ Підключення до бази даних Postgres через Prisma...');
-    
-    // Створюємо новий тестовий запис
-    const newStudent = await prisma.student.create({
-        data: {
-            name: `Студент ${Math.floor(Math.random() * 1000)}`,
-        },
-    });
-    console.log('✅ Створено запис у Postgres:', newStudent);
-
-    // Зчитуємо всі існуючі записи
-    const allStudents = await prisma.student.findMany();
-    console.log(`📊 Всього записів у базі: ${allStudents.length}`);
-    console.log(allStudents);
-
-
-    // --- 3. ЗАВЕРШЕННЯ ---
-    await redisClient.quit();
-    await prisma.$disconnect();
-    console.log('\n🏁 Перевірку успішно завершено!');
-}
-
-main().catch((e) => {
-    console.error('Сталася критична помилка:', e);
-    process.exit(1);
+  res.statusCode = 404;
+  res.end('Not found');
+}).listen(3009, () => {
+  console.log('Server running on http://localhost:3009');
 });

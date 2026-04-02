@@ -9,5 +9,4 @@ services:
     volumes:
       - ./app:/usr/src/app
     ports:
-      - "3009:3009"       
-      - "3001:3001"         
+      - "3009:3009"               

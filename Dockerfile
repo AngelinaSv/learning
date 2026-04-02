@@ -8,7 +8,6 @@ WORKDIR /usr/src/app
 
 # Відкриваємо порти для додатку (3000) та WebSocket (3001)
 EXPOSE 3009
-EXPOSE 3001
 
 # Копіюємо package.json та встановлюємо залежності
 COPY app/package*.json ./
@@ -18,4 +17,4 @@ RUN npm install
 COPY app/ ./
 
 # Команда за замовчуванням (утримує контейнер активним)
-CMD ["tail", "-f", "/dev/null"]
+CMD ["node", "index.js"]

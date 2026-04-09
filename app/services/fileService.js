@@ -1,91 +1,155 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { ERROR_MESSAGES } from '../constants/errors/file.errors.js';
+import { STATUSES } from '../constants/file.constants.js';
 
-const STORAGE = path.join(__dirname, '../storage');
-const MAX_SIZE = 3 * 1024 * 1024;
-const STATUSES = {
-  DONE: 'done',
-  UPLOADING: 'uploading',
-  ERROR: 'error',
-};
-const ERROR_MESSAGES = {
-  QUOTA_EXCEEDED: 'Quota exceeded',
-};
+export class FileService {
+  constructor() {
+    this.STORAGE = path.join(process.cwd(), 'storage');
+    this.MAX_SIZE = 5 * 1024 * 1024;
+    this.filesStatuses = {};
+    this.fileSizes = {};
 
-const filesStatuses = {};
-const fileSizes = {};
-
-function getTotalSize() {
-  return Object.values(fileSizes).reduce((a, b) => a + b, 0);
-}
-
-exports.checkFileExists = (fileId) => {
-  return fs.existsSync(path.join(STORAGE, fileId));
-};
-
-exports.checkQuota = (fileId, contentLength) => {
-  if (
-    (contentLength && contentLength > MAX_SIZE) ||
-    (getTotalSize() + contentLength > MAX_SIZE)
-  ) {
-    filesStatuses[fileId] = { status: STATUSES.ERROR };
-    return { allowed: false, message: ERROR_MESSAGES.QUOTA_EXCEEDED };
+    if (!fs.existsSync(this.STORAGE)) {
+      fs.mkdirSync(this.STORAGE);
+    }
   }
 
-  return { allowed: true };
-};
-
-exports.saveChunk = (fileId, req, res) => {
-  const filePath = path.join(STORAGE, fileId);
-
-  if (!filesStatuses[fileId]) {
-    filesStatuses[fileId] = { status: STATUSES.UPLOADING };
-    fileSizes[fileId] = 0;
+  getTotalSize() {
+    const files = fs.readdirSync(this.STORAGE);
+    return files.reduce((total, filename) => {
+      const stats = fs.statSync(path.join(this.STORAGE, filename));
+      return total + stats.size;
+    }, 0);
   }
 
-  const writeStream = fs.createWriteStream(filePath, {
-    flags: 'a',
-  });
+  checkFileExists(filename) {
+    return fs.existsSync(path.join(this.STORAGE, filename));
+  }
 
-  req.on('data', chunk => {
-    fileSizes[fileId] += chunk.length;
-
-    if (getTotalSize() > MAX_SIZE) {
-      writeStream.destroy();
-      fs.unlinkSync(filePath);
-      filesStatuses[fileId] = { status: STATUSES.ERROR};
-      return res.end('Quota exceeded');
+  isQuotaExceeded(fileSize) {
+    if (!fileSize) {
+      return false;
     }
 
-    writeStream.write(chunk);
-  });
+    if (fileSize > this.MAX_SIZE) {
+      return true;
+    }
 
-  req.on('end', () => {
-    filesStatuses[fileId] = { status: STATUSES.DONE };
-    writeStream.end();
-    res.end('Chunk saved');
-  });
-};
+    if (this.getTotalSize() + fileSize > this.MAX_SIZE) {
+      return true;
+    }
 
-exports.getFiles = () => {
-  return fs.readdirSync(STORAGE);
-};
-
-exports.getFileStream = (fileId) => {
-  return fs.createReadStream(path.join(STORAGE, fileId));
-};
-
-exports.deleteFile = (fileId) => {
-  const filePath = path.join(STORAGE, fileId);
-
-  if (fs.existsSync(filePath)) {
-    const size = fs.statSync(filePath).size;
-    fs.unlinkSync(filePath);
-    delete fileSizes[fileId];
-    delete filesStatuses[fileId];
+    return false;
   }
-};
 
-exports.getStatus = (fileId) => {
-  return filesStatuses[fileId];
-};
+  checkQuota(filename, contentLength) {
+    if (this.isQuotaExceeded(contentLength)) {
+      this.filesStatuses[filename] = { status: STATUSES.ERROR };
+      return { allowed: false };
+    }
+    return { allowed: true };
+  }
+
+  async saveFromBuffer(filename, buffer) {
+    const filePath = path.join(this.STORAGE, filename);
+    
+    this.filesStatuses[filename] = { status: STATUSES.UPLOADING };
+    this.fileSizes[filename] = 0;
+
+    try {
+      fs.writeFileSync(filePath, buffer);
+      this.fileSizes[filename] = buffer.length;
+      this.filesStatuses[filename] = { status: STATUSES.DONE };
+      return { message: 'File saved' };
+    } catch (err) {
+      this.filesStatuses[filename] = { status: STATUSES.ERROR };
+      throw err;
+    }
+  }
+
+  async saveChunk(filename, req) {
+    const filePath = path.join(this.STORAGE, filename);
+
+    if (!this.filesStatuses[filename]) {
+      this.filesStatuses[filename] = { status: STATUSES.UPLOADING };
+      this.fileSizes[filename] = 0;
+    }
+
+    return new Promise((resolve, reject) => {
+      const writeStream = fs.createWriteStream(filePath, { flags: 'a' });
+
+      req.on('data', (chunk) => {
+        this.fileSizes[filename] += chunk.length;
+
+        if (this.getTotalSize() > this.MAX_SIZE) {
+          writeStream.destroy();
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+          }
+          this.filesStatuses[filename] = { status: STATUSES.ERROR };
+          return reject(new Error(ERROR_MESSAGES.QUOTA_EXCEEDED));
+        }
+
+        writeStream.write(chunk);
+      });
+
+      req.on('end', () => {
+        this.filesStatuses[filename] = { status: STATUSES.DONE };
+        writeStream.end();
+        resolve({ message: 'Chunk saved' });
+      });
+
+      req.on('error', (err) => {
+        writeStream.destroy();
+        reject(err);
+      });
+    });
+  }
+
+  getFiles() {
+    return fs.readdirSync(this.STORAGE);
+  }
+
+  getFilesWithMetadata() {
+    const files = fs.readdirSync(this.STORAGE);
+    return files.map(filename => {
+      const filePath = path.join(this.STORAGE, filename);
+      const stats = fs.statSync(filePath);
+      return {
+        filename,
+        status: this.filesStatuses[filename]?.status || 'done',
+        size: stats.size
+      };
+    });
+  }
+
+  getFileStream(filename) {
+    return fs.createReadStream(path.join(this.STORAGE, filename));
+  }
+
+  deleteFile(filename) {
+    const filePath = path.join(this.STORAGE, filename);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      delete this.fileSizes[filename];
+      delete this.filesStatuses[filename];
+    }
+  }
+
+  getStatus(filename) {
+    return this.filesStatuses[filename] || { status: STATUSES.ERROR };
+  }
+
+  getQuota() {
+    return this.MAX_SIZE;
+  }
+
+  setQuota(bytes) {
+    if (typeof bytes === 'number' && bytes > 0) {
+      this.MAX_SIZE = bytes;
+      return this.MAX_SIZE;
+    }
+    return null;
+  }
+}

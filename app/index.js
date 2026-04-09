@@ -1,31 +1,41 @@
-const http = require('http');
-const url = require('url');
-const router = require('./router');
+import dotenv from 'dotenv';
+import express from 'express';
+import path from 'path';
+import { fileRouter } from './controllers/fileController.js';
+import { FileService } from './services/fileService.js';
+import { getDirname } from './utils/dirname.js';
+import { errorHandler } from './middlewares/errorHandler.js';
+import { notFoundHandler } from './middlewares/notFoundHandler.js';
 
-const fs = require('fs');
-const path = require('path');
+dotenv.config();
 
-const docsDir = path.join(__dirname, 'storage');
+const app = express();
+const fileService = new FileService();
 
-if (!fs.existsSync(docsDir)) {
-  fs.mkdirSync(docsDir, { recursive: true });
-} 
+const __dirname = getDirname(import.meta.url);
 
-http.createServer((req, res) => {
-  const parsedUrl = url.parse(req.url, true);
-  req.pathname = parsedUrl.pathname;
-  req.query = parsedUrl.query;
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
 
-  for (const route of router) {
-    if (req.method === route.method && route.path.test(req.pathname)) {
-      const params = req.pathname.match(route.path);
-      req.params = params?.slice(1);
-      return route.handler(req, res);
-    }
-  }
+async function main() {
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
 
-  res.statusCode = 404;
-  res.end('Not found');
-}).listen(3009, () => {
-  console.log('Server running on http://localhost:3009');
-});
+  app.get('/', (req, res) => {
+    const files = fileService.getFilesWithMetadata();
+    res.render('index', { files, title: 'File Upload Service' });
+  });
+
+  app.use('/files', fileRouter);
+
+  app.use(notFoundHandler);
+  app.use(errorHandler);
+
+  const PORT = process.env.PORT || 3009;
+
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}
+
+main();

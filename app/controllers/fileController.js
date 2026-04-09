@@ -1,55 +1,88 @@
-const fileService = require('../services/fileService');
+import { Router } from 'express';
+import multer from 'multer';
+import path from 'path';
+import AppError from '../errors/appError.js';
+import { FileService } from '../services/fileService.js';
+import { ERROR_MESSAGES, ERROR_CODES } from '../constants/errors/file.errors.js';
+import { MESSAGES } from '../constants/file.constants.js';
+import { MIME_TYPES } from '../constants/mimeTypes.js';
+import { validateQuota } from '../middlewares/validateQuota.js';
+import { decodeIdParam } from '../middlewares/decodeIdParam.js';
 
-exports.getFiles = (req, res) => {
-  res.end(JSON.stringify(fileService.getFiles()));
-};
+const router = Router();
+const fileService = new FileService();
 
-exports.getFile = (req, res) => {
-  const id = decodeURIComponent(req.params[0]);
-  const fileExists = fileService.checkFileExists(id);
-
-  if (!fileExists) {
-    res.writeHead(404, { 'Content-Type': 'text/plain' });
-    res.end('File not found');
-    return;
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, fileService.STORAGE);
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
   }
+});
 
-  const stream = fileService.getFileStream(id);
+const upload = multer({ storage });
 
-  stream.pipe(res);
-};
+router.get('/quota', (req, res) => {
+  res.json({ quota: fileService.getQuota(), used: fileService.getTotalSize() });
+});
 
-exports.deleteFile = (req, res) => {
-  const id = decodeURIComponent(req.params[0]);
-  const fileExists = fileService.checkFileExists(id);
-
-  if (!fileExists) {
-    res.writeHead(404, { 'Content-Type': 'text/plain' });
-    res.end('File not found');
-    return;
+router.post('/quota', validateQuota, (req, res, next) => {
+  const { quota } = req.body;
+  const newQuota = fileService.setQuota(quota);
+  if (newQuota === null) {
+    throw new AppError(ERROR_MESSAGES.INVALID_QUOTA, 400);
   }
+  res.json({ quota: newQuota });
+});
 
-  fileService.deleteFile(id);
-  res.end('Deleted');
-};
+router.get('/', (req, res) => {
+  const files = fileService.getFilesWithMetadata();
+  res.json({ files });
+});
 
-exports.getStatus = (req, res) => {
-  const id = decodeURIComponent(req.params[0]);
+router.get('/:id', decodeIdParam, (req, res) => {
+  const id = req.params.id;
   
-  const status = fileService.getStatus(id);
-  res.end(JSON.stringify(status));
-};
+  if (!fileService.checkFileExists(id)) {
+    throw new AppError(ERROR_MESSAGES.FILE_NOT_FOUND, 404, ERROR_CODES.FILE_NOT_FOUND);
+  }
+  const stream = fileService.getFileStream(id);
+  const ext = path.extname(id).toLowerCase();
 
-exports.uploadChunk = (req, res) => {
-  const contentLength = Number(req.headers['content-length']);
-  const { fileId } = req.query;
+  res.setHeader('Content-Type', MIME_TYPES[ext] || 'application/octet-stream');
+  stream.pipe(res);
+});
 
-  const quotaCheck = fileService.checkQuota(fileId, contentLength);
+router.get('/:id/status', decodeIdParam, (req, res) => {
+  const id = req.params.id;
+  if (!fileService.checkFileExists(id)) {
+    throw new AppError(ERROR_MESSAGES.FILE_NOT_FOUND, 404, ERROR_CODES.FILE_NOT_FOUND);
+  }
+  res.json({ status: fileService.getStatus(id) });
+});
 
-  if (!quotaCheck.allowed) {
-    res.writeHead(413);
-    return res.end(quotaCheck.message);
+router.delete('/:id', decodeIdParam, (req, res) => {
+  const id = req.params.id;
+  if (!fileService.checkFileExists(id)) {
+    throw new AppError(ERROR_MESSAGES.FILE_NOT_FOUND, 404, ERROR_CODES.FILE_NOT_FOUND);
+  }
+  fileService.deleteFile(id);
+  res.status(204).send();
+});
+
+router.post('/', upload.single('file'), (req, res, next) => {
+  if (!req.file) {
+    throw new AppError(ERROR_MESSAGES.INVALID_FILE_ID, 400, ERROR_CODES.INVALID_FILE_ID);
   }
 
-  fileService.saveChunk(fileId, req, res);
-};
+  const quotaCheck = fileService.checkQuota(req.file.originalname, req.file.size);
+  if (!quotaCheck.allowed) {
+    fileService.deleteFile(req.file.originalname);
+    throw new AppError(ERROR_MESSAGES.QUOTA_EXCEEDED, 413, ERROR_CODES.QUOTA_EXCEEDED);
+  }
+
+  res.status(200).json({ message: MESSAGES.FILE_UPLOADED });
+});
+
+export const fileRouter = router;

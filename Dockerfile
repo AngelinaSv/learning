@@ -9,4 +9,4 @@ RUN npm install
 
 COPY app/ ./
 
-CMD ["tail", "-f", "/dev/null"]
+CMD ["npm", "run", "start"]

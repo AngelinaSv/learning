@@ -33,25 +33,6 @@ Server runs at `http://localhost:3009`
 
 Swagger documentation available at `http://localhost:3009/api`
 
-### Auth Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/auth/register` | Register new user |
-| POST | `/auth/login` | Login user |
-| GET | `/auth/profile` | Get current user profile |
-
-### File Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/files` | Get user's files |
-| POST | `/files/upload` | Upload file |
-| GET | `/files/:filename` | Download/view file |
-| DELETE | `/files/:filename` | Delete file |
-| GET | `/files/quota` | Get quota info |
-| PUT | `/files/quota` | Update quota |
-
 ### Storage Structure
 
 ```

@@ -5,15 +5,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { User } from 'src/user/types/user.type';
-
-interface RequestWithUser {
-  body: {
-    email: string;
-    password: string;
-  };
-  user?: User;
-}
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -27,7 +18,6 @@ export class AuthGuard implements CanActivate {
     let email = body.email || query.email;
     let password = body.password || query.password;
 
-    // For multipart FormData, multer puts text fields directly in body
     if (!email && body.email) email = body.email;
     if (!password && body.password) password = body.password;
 

@@ -21,17 +21,11 @@ export class StorageService {
     await fs.mkdir(this.getUserDir(userId), { recursive: true });
   }
 
-  async getFiles(userId: string) {
-    console.log('STORAGE', this.STORAGE);
-    console.log('this.getUserDir(userId)', this.getUserDir(userId));
+  async getFiles(userId: string) {;
     return fs.readdir(this.getUserDir(userId));
   }
 
   async getFileStats(userId: string, filename: string) {
-    console.log(
-      'this.getFilePath(userId, filename)',
-      this.getFilePath(userId, filename),
-    );
     return fs.stat(this.getFilePath(userId, filename));
   }
 

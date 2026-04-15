@@ -3,10 +3,10 @@ version: '3.8'
 services:
   app:
     build:
-      context: .
+      context: ./app
       dockerfile: Dockerfile
     container_name: study_node_app
-    volumes:
-      - ./app:/usr/src/app
     ports:
-      - "3009:3009"    
+      - "3009:3009"
+    volumes:
+      - ./app/storage:/usr/src/app/storage

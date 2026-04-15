@@ -1,114 +1,82 @@
-# File Service
+# Internship - File Storage Service
 
-A simple file upload/download service with quota management.
+NestJS-based file storage service with authentication and quota management.
+
+## Tech Stack
+
+- NestJS
+- TypeScript
+- Swagger (API docs at `/api`)
+- Docker / Docker Compose
 
 ## Setup
 
+### Local Development
+
 ```bash
+cd app
 npm install
-npm start
+npm run start:dev
+```
+
+Server runs at `http://localhost:3009`
+
+### Docker
+
+```bash
+docker-compose up -d --build
 ```
 
 Server runs at `http://localhost:3009`
 
 ## API Documentation
 
-### File Routes
+Swagger documentation available at `http://localhost:3009/api`
 
-#### GET /files
-Get list of all uploaded files.
+### Auth Endpoints
 
-**Response:**
-```json
-{
-  "files": [
-    {
-      "filename": "example.txt",
-      "status": "done",
-      "size": 1024
-    }
-  ]
-}
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/auth/register` | Register new user |
+| POST | `/auth/login` | Login user |
+| GET | `/auth/profile` | Get current user profile |
+
+### File Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/files` | Get user's files |
+| POST | `/files/upload` | Upload file |
+| GET | `/files/:filename` | Download/view file |
+| DELETE | `/files/:filename` | Delete file |
+| GET | `/files/quota` | Get quota info |
+| PUT | `/files/quota` | Update quota |
+
+### Storage Structure
+
+```
+storage/
+  files/
+    {userId}/
+      - user files
+  users.json
+    - user data
 ```
 
-#### POST /files
-Upload a file.
+## Project Structure
 
-**Request:** `multipart/form-data`
-- `file` (required): The file to upload
-
-**Response (200):**
-```json
-{
-  "message": "File uploaded successfully"
-}
 ```
-
-**Errors (400):** No file provided
-**Errors (413):** Quota exceeded
-
-#### GET /files/:filename
-Download or view a file.
-
-**Response:** File content with appropriate Content-Type header.
-
-**Errors (404):** File not found
-
-#### DELETE /files/:filename
-Delete a file.
-
-**Response:** 204 No Content
-
-**Errors (404):** File not found
-
-#### GET /files/:filename/status
-Get upload status of a file.
-
-**Response:**
-```json
-{
-  "status": { "status": "done" }
-}
+app/
+├── src/
+│   ├── auth/           # Authentication module
+│   ├── file/           # File management module
+│   ├── storage/        # Storage service
+│   ├── user/           # User module
+│   └── main.ts         # Entry point
+├── storage/            # File storage
+├── Dockerfile
+└── docker-compose.yml
 ```
-
-### Quota Routes
-
-#### GET /files/quota
-Get current quota and usage.
-
-**Response:**
-```json
-{
-  "quota": 5242880,
-  "used": 102400
-}
-```
-
-#### POST /files/quota
-Update storage quota.
-
-**Request:**
-```json
-{
-  "quota": 10485760
-}
-```
-
-**Response (200):**
-```json
-{
-  "quota": 10485760
-}
-```
-
-**Errors (400):** Invalid quota value
-
-## Web Interface
-
-Visit `/` for the web interface with:
-- Upload form
-- File list with view/delete actions
-- Quota display and management
 
 ## Error Responses
 
@@ -119,7 +87,3 @@ All errors return JSON:
   "code": "ERROR_CODE"
 }
 ```
-
-## Storage
-
-Files are stored in the `./storage` directory with original filenames.

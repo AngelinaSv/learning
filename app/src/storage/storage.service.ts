@@ -2,12 +2,18 @@ import { Injectable } from '@nestjs/common';
 import * as fs from 'fs/promises';
 import * as fss from 'fs';
 import * as path from 'path';
-import { User } from 'src/user/types/user.type';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class StorageService {
-  private STORAGE = path.join(process.cwd(), 'storage/files');
-  private usersFile = path.join(process.cwd(), 'storage/users.json');
+  private STORAGE: string;
+
+  constructor(private configService: ConfigService) {
+    this.STORAGE = path.join(
+      process.cwd(),
+      this.configService.get<string>('storage.path') || 'storage/files',
+    );
+  }
 
   getFilePath(userId: string, filename: string) {
     return path.join(this.STORAGE, userId, filename);
@@ -21,7 +27,7 @@ export class StorageService {
     await fs.mkdir(this.getUserDir(userId), { recursive: true });
   }
 
-  async getFiles(userId: string) {;
+  async getFiles(userId: string) {
     return fs.readdir(this.getUserDir(userId));
   }
 
@@ -55,6 +61,7 @@ export class StorageService {
 
   async saveFromBuffer(userId: string, filename: string, buffer: Buffer) {
     const filePath = this.getFilePath(userId, filename);
+    await fs.mkdir(path.dirname(filePath), { recursive: true });
     await fs.writeFile(filePath, buffer);
   }
 
@@ -83,18 +90,5 @@ export class StorageService {
       recursive: true,
       force: true,
     });
-  }
-
-  async readUsers(): Promise<User[]> {
-    try {
-      const data = await fs.readFile(this.usersFile, 'utf8');
-      return JSON.parse(data) as User[];
-    } catch {
-      return [];
-    }
-  }
-
-  async writeUsers(users: User[]) {
-    await fs.writeFile(this.usersFile, JSON.stringify(users, null, 2));
   }
 }

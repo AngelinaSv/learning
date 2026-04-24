@@ -3,6 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import express from 'express';
+import { logger } from './common/middlewares/logger.middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -11,6 +12,8 @@ async function bootstrap() {
   app.use(express.urlencoded({ extended: true }));
 
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
+
+  app.use(logger);
 
   const config = new DocumentBuilder()
     .setTitle('File Storage API')

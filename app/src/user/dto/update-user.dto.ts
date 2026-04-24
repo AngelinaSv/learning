@@ -6,16 +6,21 @@ import {
   IsString,
   Min,
 } from 'class-validator';
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateUserDto {
-  @ApiPropertyOptional({ example: 'user@example.com' })
-  @IsEmail()
-  email: string;
-
-  @ApiPropertyOptional({ example: 'password123' })
+  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
+  @IsNotEmpty()
   @IsString()
-  password: string;
+  id: string;
+
+  @ApiProperty({ example: 'user@example.com' })
+  @IsEmail()
+  email?: string;
+
+  @ApiProperty({ example: 'password123' })
+  @IsString()
+  password?: string;
 
   @ApiPropertyOptional({ example: 1073741824, description: 'Quota in bytes' })
   @IsOptional()

@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import * as fs from 'fs';
+import { File } from './entities/file.entity';
 import { StorageService } from 'src/storage/storage.service';
-import { User } from 'src/user/types/user.type';
+import { User } from 'src/user/entities/user.entity';
+import { ConfigService } from '@nestjs/config';
 
 export interface FileInfo {
   filename: string;
@@ -26,7 +30,16 @@ export class FileService {
   private fileStatuses: Record<string, Record<string, { status: FileStatus }>> =
     {};
 
-  constructor(private storage: StorageService) {}
+  constructor(
+    @InjectRepository(File)
+    private fileRepository: Repository<File>,
+    private storage: StorageService,
+    private configService: ConfigService,
+  ) {}
+
+  private getStoragePath(): string {
+    return this.configService.get<string>('storage.path') || 'storage/files';
+  }
 
   async getTotalSize(userId: string): Promise<number> {
     return this.storage.getFolderSize(userId);
@@ -41,7 +54,6 @@ export class FileService {
     if (newFileSize > user.quota) return true;
 
     const total = await this.getTotalSize(user.id);
-
     return total + newFileSize > user.quota;
   }
 
@@ -74,6 +86,15 @@ export class FileService {
 
     try {
       await this.storage.saveFromBuffer(user.id, filename, buffer);
+
+      const file = this.fileRepository.create({
+        filename,
+        size: buffer.length,
+        path: `${this.getStoragePath()}/${user.id}/${filename}`,
+        user,
+      });
+      await this.fileRepository.save(file);
+
       this.fileStatuses[user.id][filename] = { status: FILE_STATUSES.DONE };
       return {
         filename,
@@ -147,10 +168,20 @@ export class FileService {
     const finalBuffer = Buffer.concat(buffers);
     await this.storage.saveFromBuffer(user.id, filename, finalBuffer);
 
+    const file = this.fileRepository.create({
+      filename,
+      size: finalBuffer.length,
+      path: `${this.getStoragePath()}/${user.id}/${filename}`,
+      user,
+    });
+    await this.fileRepository.save(file);
+
     for (let i = 0; i < totalChunks; i++) {
       try {
         await this.storage.deleteFile(user.id, `${filename}.chunk.${i}`);
-      } catch {}
+      } catch {
+        // Ignore delete errors for chunks
+      }
     }
 
     return {
@@ -160,28 +191,30 @@ export class FileService {
   }
 
   async getFiles(user: User): Promise<string[]> {
-    const files = await this.storage.getFiles(user.id);
-    return files.filter((f) => !f.includes('.chunk.'));
+    const dbFiles = await this.fileRepository.find({
+      where: { user: { id: user.id } },
+    });
+    return dbFiles.map((f) => f.filename);
   }
 
   async getFilesWithMetadata(user: User): Promise<FileInfo[]> {
-    const files = await this.storage.getFiles(user.id);
+    const dbFiles = await this.fileRepository.find({
+      where: { user: { id: user.id } },
+    });
 
     const result: FileInfo[] = [];
 
-    for (const filename of files) {
-      if (filename.includes('.chunk.')) continue;
-
-      try {
-        const stat = await this.storage.getFileStats(user.id, filename);
+    for (const file of dbFiles) {
+      const storageFiles = await this.storage.getFiles(user.id);
+      if (storageFiles.includes(file.filename)) {
         result.push({
-          filename,
-          size: stat.size,
+          filename: file.filename,
+          size: file.size,
           status:
-            this.fileStatuses[user.id]?.[filename]?.status ||
+            this.fileStatuses[user.id]?.[file.filename]?.status ||
             FILE_STATUSES.DONE,
         });
-      } catch {}
+      }
     }
 
     return result;
@@ -192,21 +225,24 @@ export class FileService {
   }
 
   async deleteFile(user: User, filename: string): Promise<void> {
-    const exists = await this.storage.fileExists(user.id, filename);
+    const file = await this.fileRepository.findOne({
+      where: { user: { id: user.id }, filename },
+    });
 
-    if (!exists) {
+    if (!file) {
       throw new Error('File not found');
     }
 
     await this.storage.deleteFile(user.id, filename);
+    await this.fileRepository.remove(file);
     delete this.fileStatuses[user.id]?.[filename];
   }
 
-  async getFileStats(userId: string, filename: string) {
+  getFileStats(userId: string, filename: string) {
     return this.storage.getFileStats(userId, filename);
   }
 
-  async getFilePath(userId: string, filename: string): Promise<string> {
+  getFilePath(userId: string, filename: string): string {
     return this.storage.getFilePath(userId, filename);
   }
 }

@@ -1,0 +1,14 @@
+[
+  {
+    "id": "a9dbd5ec-0737-4ad1-9832-3f6e4eabf0fc",
+    "email": "anna97asakura@gmail.com",
+    "password": "123",
+    "quota": 1073741824
+  },
+  {
+    "id": "5e6ef714-05a7-4bdc-ad69-94d25d1eeecb",
+    "email": "dockertest@test.com",
+    "password": "test",
+    "quota": 1073741824
+  }
+]

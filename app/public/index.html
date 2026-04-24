@@ -1,550 +1,286 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>File Service</title>
-    <style>
-      * {
-        box-sizing: border-box;
-        font-family: sans-serif;
-      }
-      body {
-        max-width: 800px;
-        margin: 40px auto;
-        padding: 0 20px;
-      }
-      h1,
-      h2,
-      h3 {
-        color: #333;
-      }
-      .card {
-        background: #f5f5f5;
-        padding: 20px;
-        border-radius: 8px;
-        margin-bottom: 20px;
-      }
-      input,
-      select {
-        margin: 10px 0;
-        padding: 8px;
-        width: 100%;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-      }
-      button {
-        padding: 8px 16px;
-        cursor: pointer;
-        border-radius: 4px;
-      }
-      .btn-primary {
-        background: #2196f3;
-        color: white;
-        border: none;
-      }
-      .btn-success {
-        background: #4caf50;
-        color: white;
-        border: none;
-      }
-      .btn-danger {
-        background: #f44336;
-        color: white;
-        border: none;
-      }
-      .btn-warning {
-        background: #ff9800;
-        color: white;
-        border: none;
-      }
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 15px;
-      }
-      th,
-      td {
-        padding: 10px;
-        text-align: left;
-        border-bottom: 1px solid #ddd;
-      }
-      th {
-        background: #333;
-        color: white;
-      }
-      .status-done {
-        color: green;
-      }
-      .status-uploading {
-        color: orange;
-      }
-      .status-error {
-        color: red;
-      }
-      .message {
-        padding: 12px;
-        margin: 15px 0;
-        border-radius: 4px;
-      }
-      .success {
-        background: #d4edda;
-        color: #155724;
-      }
-      .error {
-        background: #f8d7da;
-        color: #721c24;
-      }
-      .quota-bar {
-        height: 20px;
-        background: #e0e0e0;
-        border-radius: 10px;
-        overflow: hidden;
-        margin: 10px 0;
-      }
-      .quota-fill {
-        height: 100%;
-        background: #4caf50;
-        transition: width 0.3s;
-      }
-      .quota-fill.warning {
-        background: #ff9800;
-      }
-      .quota-fill.danger {
-        background: #f44336;
-      }
-      .quota-info {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 10px;
-      }
-      .hidden {
-        display: none;
-      }
-      .auth-section {
-        max-width: 400px;
-        margin: 100px auto;
-      }
-      .tabs {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 20px;
-      }
-      .tabs button {
-        flex: 1;
-      }
-      .tabs button.active {
-        background: #2196f3;
-        color: white;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>File Service</h1>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>File Storage</title>
+  <style>
+    * { box-sizing: border-box; font-family: sans-serif; }
+    body { max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+    h1, h2, h3 { color: #333; }
+    .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+    input { display: block; margin: 10px 0; padding: 10px; width: 100%; max-width: 300px; border: 1px solid #ddd; }
+    button { padding: 10px 20px; cursor: pointer; border: none; border-radius: 4px; }
+    .btn-primary { background: #2196f3; color: white; }
+    .btn-success { background: #4caf50; color: white; }
+    .btn-danger { background: #f44336; color: white; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+    th { background: #333; color: white; }
+    .message { padding: 12px; margin: 10px 0; border-radius: 4px; }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+    .hidden { display: none; }
+    .header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>File Storage</h1>
+    <span id="userInfo" class="hidden">
+      <span id="currentEmail"></span>
+      <button onclick="logout()">Logout</button>
+    </span>
+  </div>
 
-    <!-- Auth Section -->
-    <div id="authSection" class="card auth-section">
-      <h2>Login or Register</h2>
-      <input type="email" id="authEmail" placeholder="Email" required />
-      <input
-        type="password"
-        id="authPassword"
-        placeholder="Password"
-        required
-      />
-      <div style="display: flex; gap: 10px; margin-top: 10px">
-        <button class="btn-primary" onclick="handleLogin()">Login</button>
-        <button class="btn-success" onclick="handleRegister()">Register</button>
-      </div>
-      <div id="authMessage"></div>
+  <div id="authSection" class="card">
+    <h2>Login</h2>
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Password" />
+    <button class="btn-primary" onclick="doLogin()">Login</button>
+    <button class="btn-success" onclick="showRegister()">Register</button>
+    <div id="authMessage" class="message"></div>
+  </div>
+
+  <div id="registerSection" class="card hidden">
+    <h2>Register</h2>
+    <input type="text" id="firstName" placeholder="First Name" />
+    <input type="text" id="lastName" placeholder="Last Name" />
+    <input type="email" id="regEmail" placeholder="Email" />
+    <input type="password" id="regPassword" placeholder="Password" />
+    <button class="btn-success" onclick="doRegister()">Register</button>
+    <button onclick="showLogin()">Back</button>
+    <div id="regMessage" class="message"></div>
+  </div>
+
+  <div id="mainSection" class="hidden">
+    <div class="card">
+      <h3>Upload</h3>
+      <input type="file" id="fileInput" />
+      <button class="btn-primary" onclick="doUpload()">Upload</button>
+      <div id="uploadMessage" class="message"></div>
     </div>
-
-    <!-- Main App -->
-    <div id="mainSection" class="hidden">
-      <div class="card">
-        <div
-          style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-          "
-        >
-          <span>Logged in as: <strong id="currentUser"></strong></span>
-          <button class="btn-warning" onclick="logout()">Logout</button>
-        </div>
-      </div>
-
-      <!-- Files Tab -->
-      <div id="filesTab">
-        <div class="card">
-          <h3>Storage Quota</h3>
-          <div class="quota-info">
-            <span
-              >Used: <strong id="quotaUsed">0</strong> /
-              <strong id="quotaMax">0</strong> bytes</span
-            >
-            <span id="quotaPercent">0%</span>
-          </div>
-          <div class="quota-bar">
-            <div class="quota-fill" id="quotaBar" style="width: 0%"></div>
-          </div>
-          <form id="quotaForm">
-            <input
-              type="number"
-              id="quotaInput"
-              min="1"
-              placeholder="New quota (bytes)"
-              required
-            />
-            <button type="submit" class="btn-warning">Update Quota</button>
-          </form>
-          <div id="quotaMessage"></div>
-        </div>
-
-        <div class="card">
-          <h3>Upload File</h3>
-          <form id="uploadForm">
-            <input type="file" id="fileInput" required />
-            <button type="submit" class="btn-primary">Upload</button>
-          </form>
-          <div id="uploadMessage"></div>
-        </div>
-
-        <div class="card">
-          <h3>My Files</h3>
-          <div id="serverMessage"></div>
-          <div id="filesContainer"></div>
-        </div>
-
-        <div class="card">
-          <h3>My Account</h3>
-          <p>Email: <strong id="myEmail"></strong></p>
-          <button class="btn-danger" onclick="deleteMyAccount()">
-            Delete My Account
-          </button>
-          <div id="accountMessage"></div>
-        </div>
-      </div>
+    <div class="card">
+      <h3>Files</h3>
+      <div id="filesMessage" class="message"></div>
+      <div id="filesContainer"></div>
     </div>
+    <div class="card">
+      <h3>Profile</h3>
+      <input type="text" id="updateFirstName" placeholder="First Name" />
+      <input type="text" id="updateLastName" placeholder="Last Name" />
+      <button class="btn-primary" onclick="doUpdateProfile()">Update</button>
+      <div id="profileMessage" class="message"></div>
+    </div>
+    <div class="card">
+      <button class="btn-danger" onclick="doDeleteAccount()">Delete Account</button>
+      <div id="deleteMessage" class="message"></div>
+    </div>
+  </div>
 
-    <script>
-      const API_URL = 'http://localhost:3009';
-      let currentUser = null;
+  <script>
+    var accessToken = localStorage.getItem('accessToken');
+    var currentUser = null;
 
-      function getAuth() {
-        return {
-          email: document.getElementById('authEmail').value,
-          password: document.getElementById('authPassword').value,
-        };
+    function get(id) { return document.getElementById(id); }
+    function show(id) { id.classList.remove('hidden'); }
+    function hide(id) { id.classList.add('hidden'); }
+
+    function msg(id, text, type) {
+      var el = get(id);
+      el.className = 'message ' + (type || 'error');
+      el.textContent = text;
+      if (type === 'success') setTimeout(function(){ el.textContent = ''; }, 3000);
+    }
+
+    function formatBytes(bytes) {
+      if (!bytes) return '0 B';
+      var k = 1024, sizes = ['B', 'KB', 'MB', 'GB'];
+      var i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function getHeaders() {
+      var h = { 'Authorization': 'Bearer ' + accessToken };
+      if (currentUser && currentUser.roles) {
+        h['X-User-Roles'] = currentUser.roles.map(function(r){ return r.name || r; }).join(',');
+      }
+      return h;
+    }
+
+    function showLogin() {
+      hide(get('registerSection'));
+      show(get('authSection'));
+    }
+
+    function showRegister() {
+      hide(get('authSection'));
+      show(get('registerSection'));
+    }
+
+    function doRegister() {
+      var firstName = get('firstName').value;
+      var lastName = get('lastName').value;
+      var email = get('regEmail').value;
+      var password = get('regPassword').value;
+
+      if (!firstName || !lastName || !email || !password) {
+        msg('regMessage', 'Fill all fields');
+        return;
       }
 
-      function showMessage(elementId, text, type = 'error') {
-        const el = document.getElementById(elementId);
-        el.className = `message ${type}`;
-        el.textContent = text;
-        if (type === 'success') setTimeout(() => (el.textContent = ''), 3000);
+      fetch('/auth/sign-up', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ firstName: firstName, lastName: lastName, email: email, password: password })
+      })
+      .then(function(res){ return res.json(); })
+      .then(function(data) {
+        if (!data.accessToken) throw new Error(data.message || 'Error');
+        msg('regMessage', 'Registered! Now login.', 'success');
+        showLogin();
+        get('email').value = email;
+      })
+      .catch(function(e){ msg('regMessage', e.message); });
+    }
+
+    function doLogin() {
+      var email = get('email').value;
+      var password = get('password').value;
+
+      if (!email || !password) {
+        msg('authMessage', 'Enter email and password');
+        return;
       }
 
-      function formatBytes(bytes) {
-        if (bytes === 0) return '0 B';
-        const k = 1024;
-        const sizes = ['B', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-      }
+      fetch('/auth/sign-in', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, password: password })
+      })
+      .then(function(res){ return res.json(); })
+      .then(function(data) {
+        if (!data.accessToken) throw new Error(data.message || 'Error');
+        accessToken = data.accessToken;
+        localStorage.setItem('accessToken', accessToken);
+        currentUser = data.user || data;
+        showMain();
+      })
+      .catch(function(e){ msg('authMessage', e.message); });
+    }
 
-      function showTab(tab) {
-        document
-          .getElementById('filesTab')
-          .classList.toggle('hidden', tab !== 'files');
-        document
-          .getElementById('usersTab')
-          .classList.toggle('hidden', tab !== 'users');
-        document
-          .getElementById('tabFiles')
-          .classList.toggle('active', tab === 'files');
-        document
-          .getElementById('tabUsers')
-          .classList.toggle('active', tab === 'users');
-        if (tab === 'files') loadFiles();
-        if (tab === 'users') loadUsers();
-      }
+    function logout() {
+      accessToken = null;
+      currentUser = null;
+      localStorage.removeItem('accessToken');
+      hide(get('mainSection'));
+      hide(get('userInfo'));
+      show(get('authSection'));
+    }
 
-      async function apiCall(url, method, body = null) {
-        const auth = getAuth();
-        const options = { method, headers: {} };
+    function showMain() {
+      hide(get('authSection'));
+      hide(get('registerSection'));
+      show(get('mainSection'));
+      show(get('userInfo'));
+      get('currentEmail').textContent = currentUser.email;
+      get('updateFirstName').value = currentUser.firstName || '';
+      get('updateLastName').value = currentUser.lastName || '';
+      loadFiles();
+    }
 
-        if (['POST', 'PATCH', 'DELETE'].includes(method)) {
-          const requestBody = body ? { ...body } : {};
-          if (auth.email) requestBody.email = auth.email;
-          if (auth.password) requestBody.password = auth.password;
-          if (body) Object.assign(requestBody, body);
-          options.headers['Content-Type'] = 'application/json';
-          options.body = JSON.stringify(requestBody);
-        } else if (method === 'GET' && auth.email && auth.password) {
-          const params = new URLSearchParams(auth).toString();
-          url = `${url}?${params}`;
-        }
+    function loadFiles() {
+      fetch('/file', { headers: getHeaders() })
+      .then(function(res){ return res.json(); })
+      .then(function(files) { renderFiles(files); })
+      .catch(function(e){ msg('filesMessage', e.message); });
+    }
 
-        const res = await fetch(url, options);
-        const text = await res.text();
-        if (!res.ok) {
-          const data = text ? JSON.parse(text) : {};
-          throw new Error(data.message || 'Error');
-        }
-        return text ? JSON.parse(text) : {};
-      }
+    function renderFiles(files) {
+      var c = get('filesContainer');
+      if (!files.length) { c.innerHTML = '<p>No files</p>'; return; }
+      var html = '<table><thead><tr><th>Filename</th><th>Size</th><th>Actions</th></tr></thead><tbody>';
+      files.forEach(function(f) {
+        html += '<tr><td>' + f.filename + '</td><td>' + formatBytes(f.size) + '</td><td>' +
+          '<button onclick="viewFile(\'' + f.filename + '\')">View</button> ' +
+          '<button onclick="deleteFile(\'' + f.filename + '\')">Delete</button></td></tr>';
+      });
+      c.innerHTML = html + '</tbody></table>';
+    }
 
-      async function handleLogin() {
-        const auth = getAuth();
-        if (!auth.email || !auth.password) {
-          showMessage('authMessage', 'Enter email and password');
-          return;
-        }
-        try {
-          const options = {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(auth),
-          };
-          const res = await fetch(`${API_URL}/user/login`, options);
-          if (!res.ok) {
-            const data = await res.json();
-            showMessage('authMessage', data.message || 'Login failed');
-            return;
-          }
-          const user = await res.json();
-          currentUser = user;
-          document.getElementById('authSection').classList.add('hidden');
-          document.getElementById('mainSection').classList.remove('hidden');
-          document.getElementById('currentUser').textContent = user.email;
-          document.getElementById('myEmail').textContent = user.email;
-          loadFiles();
-        } catch (e) {
-          showMessage('authMessage', e.message);
-        }
-      }
+    function doUpload() {
+      var fi = get('fileInput');
+      if (!fi.files.length) return;
 
-      async function handleRegister() {
-        const auth = getAuth();
-        if (!auth.email || !auth.password) {
-          showMessage('authMessage', 'Enter email and password');
-          return;
-        }
-        try {
-          const options = {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: auth.email,
-              password: auth.password,
-              quota: 1073741824,
-            }),
-          };
-          const res = await fetch(`${API_URL}/user`, options);
-          if (!res.ok) {
-            const data = await res.json();
-            showMessage('authMessage', data.message || 'Registration failed');
-            return;
-          }
-          const user = await res.json();
-          currentUser = user;
-          document.getElementById('authSection').classList.add('hidden');
-          document.getElementById('mainSection').classList.remove('hidden');
-          document.getElementById('currentUser').textContent = user.email;
-          document.getElementById('myEmail').textContent = user.email;
-          showMessage('authMessage', 'Account created!', 'success');
-          loadFiles();
-        } catch (e) {
-          showMessage('authMessage', e.message);
-        }
-      }
+      var fd = new FormData();
+      fd.append('file', fi.files[0]);
+      msg('uploadMessage', 'Uploading...');
 
-      function logout() {
-        currentUser = null;
-        document.getElementById('authSection').classList.remove('hidden');
-        document.getElementById('mainSection').classList.add('hidden');
-        document.getElementById('authEmail').value = '';
-        document.getElementById('authPassword').value = '';
-      }
+      fetch('/file/upload', {
+        method: 'POST',
+        headers: getHeaders(),
+        body: fd
+      })
+      .then(function(res){ return res.json(); })
+      .then(function(data) {
+        msg('uploadMessage', 'Uploaded!', 'success');
+        fi.value = '';
+        loadFiles();
+      })
+      .catch(function(e){ msg('uploadMessage', e.message); });
+    }
 
-      // User Management
-      async function createUser() {
-        const email = document.getElementById('newUserEmail').value;
-        const password = document.getElementById('newUserPassword').value;
-        const quota =
-          parseInt(document.getElementById('newUserQuota').value) || 1073741824;
+    function viewFile(filename) {
+      window.open('/file/' + encodeURIComponent(filename), '_blank');
+    }
 
-        if (!email || !password) {
-          showMessage('createUserMessage', 'Enter email and password');
-          return;
-        }
+    function deleteFile(filename) {
+      if (!confirm('Delete ' + filename + '?')) return;
+      fetch('/file/' + encodeURIComponent(filename), {
+        method: 'DELETE',
+        headers: getHeaders()
+      })
+      .then(function(){ msg('filesMessage', 'Deleted', 'success'); loadFiles(); })
+      .catch(function(e){ msg('filesMessage', e.message); });
+    }
 
-        try {
-          const options = {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password, quota }),
-          };
-          await fetch(`${API_URL}/user`, options);
-          showMessage('createUserMessage', 'User created!', 'success');
-          loadUsers();
-          document.getElementById('newUserEmail').value = '';
-          document.getElementById('newUserPassword').value = '';
-        } catch (e) {
-          showMessage('createUserMessage', e.message);
-        }
-      }
+    function doUpdateProfile() {
+      var firstName = get('updateFirstName').value;
+      var lastName = get('updateLastName').value;
+      var h = getHeaders();
+      h['Content-Type'] = 'application/json';
 
-      async function deleteMyAccount() {
-        if (!confirm('Delete your account and all files?')) return;
-        try {
-          await apiCall(`${API_URL}/user/${currentUser.id}`, 'DELETE');
-          logout();
-        } catch (e) {
-          showMessage('accountMessage', e.message);
-        }
-      }
+      fetch('/user/' + currentUser.id, {
+        method: 'PATCH',
+        headers: h,
+        body: JSON.stringify({ firstName: firstName, lastName: lastName })
+      })
+      .then(function(res){ return res.json(); })
+      .then(function() {
+        currentUser.firstName = firstName;
+        currentUser.lastName = lastName;
+        msg('profileMessage', 'Updated!', 'success');
+      })
+      .catch(function(e){ msg('profileMessage', e.message); });
+    }
 
-      // File Management
-      async function loadFiles() {
-        try {
-          const files = await apiCall(`${API_URL}/file`, 'GET');
+    function doDeleteAccount() {
+      if (!confirm('Delete account?')) return;
+      fetch('/user/' + currentUser.id, {
+        method: 'DELETE',
+        headers: getHeaders()
+      })
+      .then(function(){ alert('Deleted'); logout(); })
+      .catch(function(e){ msg('deleteMessage', e.message); });
+    }
 
-          // Calculate used quota
-          const used = files.reduce((sum, f) => sum + f.size, 0);
-          document.getElementById('quotaUsed').textContent = formatBytes(used);
-          document.getElementById('quotaMax').textContent = formatBytes(
-            currentUser.quota,
-          );
-
-          const percent =
-            currentUser.quota > 0
-              ? Math.min((used / currentUser.quota) * 100, 100)
-              : 0;
-          document.getElementById('quotaPercent').textContent =
-            percent.toFixed(1) + '%';
-          document.getElementById('quotaBar').style.width = percent + '%';
-          document.getElementById('quotaBar').className =
-            'quota-fill' +
-            (percent > 80 ? ' danger' : percent > 50 ? ' warning' : '');
-          document.getElementById('quotaInput').value = currentUser.quota;
-
-          renderFiles(files);
-        } catch (e) {
-          showMessage('serverMessage', e.message);
-        }
-      }
-
-      function renderFiles(files) {
-        const container = document.getElementById('filesContainer');
-        if (!files.length) {
-          container.innerHTML = '<p>No files uploaded yet.</p>';
-          return;
-        }
-
-        let html =
-          '<table><thead><tr><th>Filename</th><th>Size</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
-        files.forEach((file) => {
-          const encodedFilename = encodeURIComponent(file.filename);
-          html += `<tr id="row-${encodedFilename}">
-          <td>${file.filename}</td>
-          <td>${formatBytes(file.size)}</td>
-          <td><span class="status-${(file.status || 'done').toLowerCase()}">${file.status || 'done'}</span></td>
-          <td>
-            <button class="btn-success" onclick="viewFile('${file.filename}')">View</button>
-            <button class="btn-danger" onclick="deleteFile('${file.filename.replace(/'/g, "\\'")}')">Delete</button>
-          </td>
-        </tr>`;
-        });
-        container.innerHTML = html + '</tbody></table>';
-      }
-
-      function viewFile(filename) {
-        const auth = getAuth();
-        const params = new URLSearchParams(auth).toString();
-        window.open(
-          `${API_URL}/file/${encodeURIComponent(filename)}?${params}`,
-          '_blank',
-        );
-      }
-
-      async function deleteFile(filename) {
-        if (!confirm(`Delete "${filename}"?`)) return;
-        try {
-          await apiCall(`${API_URL}/file/${filename}`, 'DELETE');
-          document
-            .getElementById(`row-${encodeURIComponent(filename)}`)
-            ?.remove();
-          showMessage('serverMessage', 'File deleted', 'success');
-          loadFiles();
-        } catch (e) {
-          showMessage('serverMessage', e.message);
-        }
-      }
-
-      document
-        .getElementById('uploadForm')
-        .addEventListener('submit', async (e) => {
-          e.preventDefault();
-          const fileInput = document.getElementById('fileInput');
-          if (!fileInput.files.length) return;
-
-          const auth = getAuth();
-          const params = new URLSearchParams(auth).toString();
-          const formData = new FormData();
-          formData.append('file', fileInput.files[0]);
-
-          document.getElementById('uploadMessage').textContent = 'Uploading...';
-          document.getElementById('uploadMessage').className = 'message';
-
-          try {
-            const res = await fetch(`${API_URL}/file/upload?${params}`, {
-              method: 'POST',
-              body: formData,
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || 'Upload failed');
-            document.getElementById('uploadMessage').className =
-              'message success';
-            document.getElementById('uploadMessage').textContent =
-              'File uploaded!';
-            fileInput.value = '';
-            loadFiles();
-          } catch (err) {
-            document.getElementById('uploadMessage').className =
-              'message error';
-            document.getElementById('uploadMessage').textContent = err.message;
-          }
-        });
-
-      document
-        .getElementById('quotaForm')
-        .addEventListener('submit', async (e) => {
-          e.preventDefault();
-          const newQuota = parseInt(
-            document.getElementById('quotaInput').value,
-            10,
-          );
-          if (!newQuota || newQuota <= 0) {
-            showMessage('quotaMessage', 'Invalid quota value');
-            return;
-          }
-          try {
-            await apiCall(`${API_URL}/user/${currentUser.id}`, 'PATCH', {
-              quota: newQuota,
-            });
-            currentUser.quota = newQuota;
-            showMessage(
-              'quotaMessage',
-              `Quota updated to ${formatBytes(newQuota)}`,
-              'success',
-            );
-            loadFiles();
-          } catch (e) {
-            showMessage('quotaMessage', e.message);
-          }
-        });
-    </script>
-  </body>
+    // Init
+    if (accessToken) {
+      fetch('/auth/profile', { headers: { 'Authorization': 'Bearer ' + accessToken } })
+      .then(function(res){ if (res.ok) return res.json(); throw new Error(); })
+      .then(function(u){ currentUser = u; showMain(); })
+      .catch(function(){ logout(); });
+    }
+  </script>
+</body>
 </html>

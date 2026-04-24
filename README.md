@@ -50,6 +50,25 @@ npm run migration:run
 npm run migration:revert
 ```
 
+### Seeds
+
+Seeding creates initial data (roles and admin user):
+
+```bash
+# Run all seeds (roles + admin)
+npm run seed
+
+# Run roles seed only
+npm run seed:roles
+
+# Seed admin user (requires users table)
+npm run seed:admin
+```
+
+**Default admin credentials:**
+- Email: `admin@example.com`
+- Password: `Admin123!`
+
 ### Tables
 
 | Table | Description |

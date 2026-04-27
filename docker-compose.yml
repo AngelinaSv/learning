@@ -23,21 +23,6 @@ services:
     container_name: study_node_app
     ports:
       - "3009:3009"
-    volumes:
-      - ./app/storage:/usr/src/app/storage
-    environment:
-      PORT: 3009
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USERNAME: postgres
-      DB_PASSWORD: postgres
-      DB_DATABASE: app
-      DB_SYNCHRONIZE: "false"
-      JWT_SECRET: your-super-secret-jwt-key-change-in-production
-      JWT_REFRESH_SECRET: your-super-secret-refresh-key-change-in-production
-      JWT_EXPIRES_IN: 15m
-      JWT_REFRESH_EXPIRES_IN: 7d
-      STORAGE_PATH: storage/files
     depends_on:
       - postgres
     networks:
@@ -50,3 +35,4 @@ networks:
 
 volumes:
   postgres_data:
+  

@@ -1,0 +1,52 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": [
+      "ES2023"
+    ],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": false, // Enabling this ensures that type definitions are checked for compatibility, which can help catch issues early.
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "resolvePackageJsonExports": true,
+    "sourceMap": true,
+    "inlineSourceMap": false,
+    "declaration": true,
+    "declarationMap": true,
+    "isolatedModules": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "incremental": true,
+    "strictNullChecks": true,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "noFallthroughCasesInSwitch": false,
+    "ignoreDeprecations": "6.0", // baseUrl are not supported in NodeNext module resolution, but we can use path aliases for better code organization.
+    "baseUrl": ".",
+    "paths": {
+      "@/models/*": [
+        "src/models/*"
+      ],
+      "@/utils/*": [
+        "src/utils/*"
+      ],
+      "@/components/*": [
+        "src/components/*"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+  ]
+}

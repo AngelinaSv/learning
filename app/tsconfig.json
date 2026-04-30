@@ -39,6 +39,9 @@
       ],
       "@/components/*": [
         "src/components/*"
+      ],
+      "@generated/*": [
+        "generated/*"
       ]
     }
   },

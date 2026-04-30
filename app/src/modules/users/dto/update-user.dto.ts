@@ -1,4 +1,11 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateUserDto } from './create-user.dto';
 
-export class UpdateUserDto extends PartialType(CreateUserDto) {}
+// TOTO: separate profile update to a different DTO
+export class UpdateUserDto extends PartialType(CreateUserDto) {
+  profile?: {
+    rating?: number;
+    balance?: number;
+    level?: number;
+  };
+}

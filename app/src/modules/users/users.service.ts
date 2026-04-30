@@ -1,27 +1,131 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './entities/user.entity';
+import { PrismaService } from '../prisma/prisma.service';
+import { DbToRole } from './mappers/user-role.mapper';
+import { PasswordHashService } from 'src/common/security/services/password-hash.service';
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly passwordHashService: PasswordHashService,
+  ) {}
+
+  async create(data: CreateUserDto) {
+    const existingUser = await this.userExists(data.email);
+
+    if (existingUser) {
+      throw new ConflictException('User with this email already exists');
+    }
+
+    const hashedPassword = await this.passwordHashService.hash(data.password);
+
+    const user = await this.prisma.users.create({
+      data: {
+        ...data,
+        password: hashedPassword,
+        profile: {
+          create: {
+            rating: 0,
+            balance: 0,
+            level: 0,
+          },
+        },
+      },
+      include: {
+        profile: true,
+      },
+    });
+
+    // TODO: mapping to UserDto
+    return {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      role: DbToRole[user.role],
+      profile: user.profile,
+    };
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async userExists(email: string): Promise<boolean> {
+    const user = await this.findOneByEmail(email);
+    return !!user;
   }
 
-  async findOneByEmail(email: string): Promise<User | undefined> {
-    return this.userRepository.findOne({ where: { email } });
+  async findOne(id: number) {
+    const user = await this.prisma.users.findUnique({
+      where: { id },
+      include: {
+        profile: true,
+        address: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException();
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      role: DbToRole[user.role],
+      profile: user.profile,
+    };
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(id: number, data: UpdateUserDto) {
+    const user = await this.findOne(id);
+
+    const updatedUser = await this.prisma.users.update({
+      where: { id: user.id },
+      data: {
+        email: data.email,
+        username: data.username,
+        profile: data.profile
+          ? {
+              update: {
+                rating: data.profile.rating,
+                level: data.profile.level,
+                balance: data.profile.balance,
+              },
+            }
+          : undefined,
+      },
+      include: {
+        profile: true,
+      },
+    });
+
+    return {
+      id: updatedUser.id,
+      email: updatedUser.email,
+      username: updatedUser.username,
+      role: DbToRole[updatedUser.role],
+      profile: updatedUser.profile,
+    };
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(id: number): Promise<void> {
+    const user = await this.findOne(id);
+
+    await this.prisma.users.update({
+      where: { id: user.id },
+      data: {
+        isDeleted: true,
+        deletedAt: new Date(),
+      },
+    });
+  }
+
+  private async findOneByEmail(email: string) {
+    const user = await this.prisma.users.findUnique({ where: { email } });
+
+    return user;
   }
 }

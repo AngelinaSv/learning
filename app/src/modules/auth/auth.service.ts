@@ -9,10 +9,11 @@ import { IUser } from 'src/common/types/types';
 @Injectable()
 export class AuthService {
   constructor(
+    private readonly prisma: UsersService,
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
   ) {}
-
+// TODO: 
   async validateUser(email: string, pass: string): Promise<any> {
     const user = await this.usersService.findOneByEmail(email);
     const passwordIsMathc = await bcrypt.compare(pass, user?.password);

@@ -3,8 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { AddressModule } from './modules/users/address/address.module';
-import { ProfileModule } from './modules/users/profile/profile.module';
+import { AddressModule } from './modules/address/address.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { PrismaModule } from './modules/prisma/prisma.module';
 import { RouletteModule } from './modules/roulette/roulette.module';
@@ -15,7 +14,6 @@ import { SessionsModule } from './modules/sessions/sessions.module';
     UsersModule,
     AuthModule,
     AddressModule,
-    ProfileModule,
     AdminModule,
     SessionsModule,
     RouletteModule,

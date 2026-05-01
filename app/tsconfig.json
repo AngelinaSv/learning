@@ -28,7 +28,6 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
-    "ignoreDeprecations": "6.0", // baseUrl are not supported in NodeNext module resolution, but we can use path aliases for better code organization.
     "baseUrl": ".",
     "paths": {
       "@/models/*": [

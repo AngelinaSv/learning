@@ -5,12 +5,5 @@
     "test",
     "dist",
     "**/*spec.ts"
-  ],
-  "compilerOptions": {
-    "paths": {
-      "@generated/*": [
-        "generated/*"
-      ]
-    }
-  }
+  ]
 }

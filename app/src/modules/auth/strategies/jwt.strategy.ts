@@ -7,6 +7,8 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DbToRole } from 'src/modules/users/mappers/user-role.mapper';
+// import { SessionsService } from 'src/modules/sessions/sessions.service';
+import { UsersService } from 'src/modules/users/users.service';
 
 export type JwtPayload = {
   sub: string;
@@ -22,7 +24,11 @@ export type DecodedJwtPayload = JwtPayload & {
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    // private readonly sessionService: SessionsService,
+    private readonly userService: UsersService,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -33,22 +39,22 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(payload: DecodedJwtPayload) {
     const { sub: userId, sessionId } = payload;
 
-    const sessionExists = await this.sessionService.checkSession(
-      sessionId,
-      userId,
-    );
+    // const sessionExists = await this.sessionService.checkSession(
+    //   sessionId,
+    //   userId,
+    // );
 
-    if (!sessionExists) {
-      throw new UnauthorizedException();
-    }
+    // if (!sessionExists) {
+    //   throw new UnauthorizedException();
+    // }
 
-    const user = await this.userService.findById(userId);
+    const user = await this.userService.findOne(+userId);
 
     if (!user) {
       throw new UnauthorizedException();
     }
 
-    if (user.status === UserStatus.BLOCKED) {
+    if (user.isBanned) {
       throw new ForbiddenException();
     }
 
@@ -56,6 +62,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       id: user.id,
       role: DbToRole[user.role],
       sessionId,
+      isBanned: user.isBanned,
     };
   }
 }

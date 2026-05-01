@@ -8,6 +8,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { DbToRole } from './mappers/user-role.mapper';
 import { PasswordHashService } from 'src/common/security/services/password-hash.service';
+import { UpdateUserByAdminDto } from '../admin/dto/update-user-by-admin.dto';
 
 @Injectable()
 export class UsersService {
@@ -48,6 +49,7 @@ export class UsersService {
       email: user.email,
       username: user.username,
       role: DbToRole[user.role],
+      createdAt: user.createdAt,
       profile: user.profile,
     };
   }
@@ -57,13 +59,25 @@ export class UsersService {
     return !!user;
   }
 
+  // TODO: create separate service for admin operations and move this method
+  async findAll() {
+    const users = await this.prisma.users.findMany({
+      where: { isDeleted: false },
+      include: {
+        profile: true,
+      },
+    });
+
+    return users;
+  }
+
   async findOne(id: number) {
     const user = await this.prisma.users.findUnique({
       where: { id },
-      include: {
-        profile: true,
-        address: true,
-      },
+      // include: {
+      //   profile: true,
+      //   address: true,
+      // },
     });
 
     if (!user) {
@@ -75,7 +89,7 @@ export class UsersService {
       email: user.email,
       username: user.username,
       role: DbToRole[user.role],
-      profile: user.profile,
+      isBanned: user.isBanned,
     };
   }
 
@@ -123,7 +137,18 @@ export class UsersService {
     });
   }
 
-  private async findOneByEmail(email: string) {
+  async updateByAdmin(id: number, data: UpdateUserByAdminDto) {
+    const user = await this.findOne(id);
+
+    const updatedUser = await this.prisma.users.update({
+      where: { id: user.id },
+      data,
+    });
+
+    return updatedUser;
+  }
+
+  async findOneByEmail(email: string) {
     const user = await this.prisma.users.findUnique({ where: { email } });
 
     return user;

@@ -8,6 +8,8 @@ import { AdminModule } from './modules/admin/admin.module';
 import { PrismaModule } from './modules/prisma/prisma.module';
 import { RouletteModule } from './modules/roulette/roulette.module';
 import { SessionsModule } from './modules/sessions/sessions.module';
+import { ProfileModule } from './modules/profile/profile.module';
+import { ProfileModule } from './modules/profile/profile.module';
 
 @Module({
   imports: [
@@ -18,6 +20,7 @@ import { SessionsModule } from './modules/sessions/sessions.module';
     SessionsModule,
     RouletteModule,
     PrismaModule,
+    ProfileModule,
   ],
   controllers: [AppController],
   providers: [AppService],

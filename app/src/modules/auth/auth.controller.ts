@@ -22,7 +22,7 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Post('sign-out')
-  async logout(@CurrentUserId() userId: number) {
-    return this.authService.logout(+userId);
+  async logout(@CurrentUserId() userId: string) {
+    return this.authService.logout(userId);
   }
 }

@@ -14,7 +14,7 @@ import { UpdateAddressDto } from './dto/update-address.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @UseGuards(JwtAuthGuard)
-@Controller('address')
+@Controller('users/me/addresses')
 export class AddressController {
   constructor(private readonly addressService: AddressService) {}
 
@@ -25,16 +25,16 @@ export class AddressController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.addressService.findOne(+id);
+    return this.addressService.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateAddressDto: UpdateAddressDto) {
-    return this.addressService.update(+id, updateAddressDto);
+    return this.addressService.update(id, updateAddressDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.addressService.remove(+id);
+    return this.addressService.remove(id);
   }
 }

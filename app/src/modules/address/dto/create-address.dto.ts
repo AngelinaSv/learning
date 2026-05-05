@@ -1,11 +1,10 @@
 import { IsNotEmpty } from 'class-validator/types/decorator/common/IsNotEmpty';
-import { IsNumber } from 'class-validator/types/decorator/typechecker/IsNumber';
 import { IsString } from 'class-validator/types/decorator/typechecker/IsString';
 
 export class CreateAddressDto {
-  @IsNumber()
+  @IsString()
   @IsNotEmpty()
-  userId!: number;
+  userId!: string;
 
   @IsString()
   @IsNotEmpty()

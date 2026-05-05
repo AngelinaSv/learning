@@ -1,7 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { DbToRole } from 'src/modules/users/mappers/user-role.mapper';
 import { UsersService } from 'src/modules/users/users.service';
 
 @Injectable()
@@ -30,6 +29,6 @@ export class RolesGuard implements CanActivate {
 
     const dbUser = await this.usersService.findOne(user.id);
 
-    return requiredRoles.includes(DbToRole[dbUser.role]);
+    return requiredRoles.includes(dbUser.role);
   }
 }

@@ -60,7 +60,7 @@ export class AuthService {
     };
   }
 
-  async logout(userId: number) {
+  async logout(userId: string) {
     // await this.sessionService.remove(user.id, sessionId);
   }
 }

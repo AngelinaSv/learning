@@ -6,7 +6,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { DbToRole } from 'src/modules/users/mappers/user-role.mapper';
 // import { SessionsService } from 'src/modules/sessions/sessions.service';
 import { UsersService } from 'src/modules/users/users.service';
 
@@ -48,7 +47,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     //   throw new UnauthorizedException();
     // }
 
-    const user = await this.userService.findOne(+userId);
+    const user = await this.userService.findOne(userId);
 
     if (!user) {
       throw new UnauthorizedException();
@@ -60,7 +59,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     return {
       id: user.id,
-      role: DbToRole[user.role],
+      role: user.role,
       sessionId,
       isBanned: user.isBanned,
     };

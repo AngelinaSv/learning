@@ -6,7 +6,6 @@ import {
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from '../prisma/prisma.service';
-import { DbToRole } from './mappers/user-role.mapper';
 import { PasswordHashService } from 'src/common/security/services/password-hash.service';
 import { UpdateUserByAdminDto } from '../admin/dto/update-user-by-admin.dto';
 
@@ -26,7 +25,7 @@ export class UsersService {
 
     const hashedPassword = await this.passwordHashService.hash(data.password);
 
-    const user = await this.prisma.users.create({
+    const user = await this.prisma.user.create({
       data: {
         ...data,
         password: hashedPassword,
@@ -48,7 +47,7 @@ export class UsersService {
       id: user.id,
       email: user.email,
       username: user.username,
-      role: DbToRole[user.role],
+      role: user.role,
       createdAt: user.createdAt,
       profile: user.profile,
     };
@@ -61,7 +60,7 @@ export class UsersService {
 
   // TODO: create separate service for admin operations and move this method
   async findAll() {
-    const users = await this.prisma.users.findMany({
+    const users = await this.prisma.user.findMany({
       where: { isDeleted: false },
       include: {
         profile: true,
@@ -71,8 +70,8 @@ export class UsersService {
     return users;
   }
 
-  async findOne(id: number) {
-    const user = await this.prisma.users.findUnique({
+  async findOne(id: string) {
+    const user = await this.prisma.user.findUnique({
       where: { id },
       // include: {
       //   profile: true,
@@ -88,15 +87,15 @@ export class UsersService {
       id: user.id,
       email: user.email,
       username: user.username,
-      role: DbToRole[user.role],
+      role: user.role,
       isBanned: user.isBanned,
     };
   }
 
-  async update(id: number, data: UpdateUserDto) {
+  async update(id: string, data: UpdateUserDto) {
     const user = await this.findOne(id);
 
-    const updatedUser = await this.prisma.users.update({
+    const updatedUser = await this.prisma.user.update({
       where: { id: user.id },
       data: {
         email: data.email,
@@ -120,15 +119,15 @@ export class UsersService {
       id: updatedUser.id,
       email: updatedUser.email,
       username: updatedUser.username,
-      role: DbToRole[updatedUser.role],
+      role: updatedUser.role,
       profile: updatedUser.profile,
     };
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: string): Promise<void> {
     const user = await this.findOne(id);
 
-    await this.prisma.users.update({
+    await this.prisma.user.update({
       where: { id: user.id },
       data: {
         isDeleted: true,
@@ -137,10 +136,10 @@ export class UsersService {
     });
   }
 
-  async updateByAdmin(id: number, data: UpdateUserByAdminDto) {
+  async updateByAdmin(id: string, data: UpdateUserByAdminDto) {
     const user = await this.findOne(id);
 
-    const updatedUser = await this.prisma.users.update({
+    const updatedUser = await this.prisma.user.update({
       where: { id: user.id },
       data,
     });
@@ -149,7 +148,7 @@ export class UsersService {
   }
 
   async findOneByEmail(email: string) {
-    const user = await this.prisma.users.findUnique({ where: { email } });
+    const user = await this.prisma.user.findUnique({ where: { email } });
 
     return user;
   }

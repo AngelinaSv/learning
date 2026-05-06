@@ -3,24 +3,23 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { AddressModule } from './modules/address/address.module';
+import { AddressesModule } from './modules/addresses/addresses.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { PrismaModule } from './modules/prisma/prisma.module';
 import { RouletteModule } from './modules/roulette/roulette.module';
 import { SessionsModule } from './modules/sessions/sessions.module';
-import { ProfileModule } from './modules/profile/profile.module';
-import { ProfileModule } from './modules/profile/profile.module';
+import { ProfilesModule } from './modules/profiles/profiles.module';
 
 @Module({
   imports: [
     UsersModule,
     AuthModule,
-    AddressModule,
     AdminModule,
     SessionsModule,
     RouletteModule,
     PrismaModule,
-    ProfileModule,
+    AddressesModule,
+    ProfilesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

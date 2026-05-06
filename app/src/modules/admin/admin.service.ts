@@ -11,7 +11,7 @@ export class AdminService {
     return this.userService.findAll();
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const user = await this.userService.findOne(id);
 
     if (!user) {
@@ -21,7 +21,7 @@ export class AdminService {
     return user;
   }
 
-  async update(id: number, data: UpdateUserDto) {
+  async update(id: string, data: UpdateUserDto) {
     const user = await this.findOne(id);
     const updated = await this.userService.update(user.id, data);
 
@@ -30,12 +30,12 @@ export class AdminService {
     return updated;
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     await this.userService.remove(id);
     // TODO: logs, history, notification
   }
 
-  async ban(id: number, data: UpdateUserByAdminDto) {
+  async ban(id: string, data: UpdateUserByAdminDto) {
     const user = await this.findOne(id);
     const banUntil = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7); // 7 days
 
@@ -50,7 +50,7 @@ export class AdminService {
     };
   }
 
-  async unban(id: number) {
+  async unban(id: string) {
     const user = await this.findOne(id);
 
     const updatedUser = await this.userService.updateByAdmin(user.id, {

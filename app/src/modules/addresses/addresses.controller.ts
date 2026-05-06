@@ -8,15 +8,15 @@ import {
   Delete,
   UseGuards,
 } from '@nestjs/common';
-import { AddressService } from './address.service';
+import { AddressesService } from './addresseses.service';
 import { CreateAddressDto } from './dto/create-address.dto';
 import { UpdateAddressDto } from './dto/update-address.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @UseGuards(JwtAuthGuard)
-@Controller('users/me/addresses')
-export class AddressController {
-  constructor(private readonly addressService: AddressService) {}
+@Controller('/addresses')
+export class AddressesController {
+  constructor(private readonly addressService: AddressesService) {}
 
   @Post()
   create(@Body() createAddressDto: CreateAddressDto) {

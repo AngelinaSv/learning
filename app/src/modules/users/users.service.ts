@@ -14,6 +14,8 @@ export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly passwordHashService: PasswordHashService,
+    private readonly profilesService: PrismaService,
+    // private readonly addressService: AddressesService,
   ) {}
 
   async create(data: CreateUserDto) {
@@ -152,4 +154,8 @@ export class UsersService {
 
     return user;
   }
+
+  // async updateAvatar(userId: string, avatar: string) {
+  //   return await this.profilesService.updateAvatar(userId, avatar);
+  // }
 }

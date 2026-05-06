@@ -26,18 +26,18 @@ export class AdminController {
 
   @Get('users/:id')
   async findOne(@Param('id') id: string) {
-    const user = await this.adminService.findOne(+id);
+    const user = await this.adminService.findOne(id);
     if (!user) throw new NotFoundException();
     return user;
   }
 
   @Patch('users/:id/ban')
   banUser(@Param('id') id: string, @Body() data: UpdateUserByAdminDto) {
-    return this.adminService.ban(+id, data);
+    return this.adminService.ban(id, data);
   }
 
   @Patch('users/:id/unban')
   unbanUser(@Param('id') id: string) {
-    return this.adminService.unban(+id);
+    return this.adminService.unban(id);
   }
 }

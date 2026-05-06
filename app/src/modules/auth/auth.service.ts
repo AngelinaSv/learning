@@ -4,14 +4,12 @@ import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcrypt';
 import { IUser } from 'src/common/types/types';
-import { AddressService } from '../address/address.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
-    private readonly addressService: AddressService,
   ) {}
   // TODO:
   async validateUser(email: string, pass: string): Promise<any> {
@@ -35,20 +33,18 @@ export class AuthService {
     }
 
     const user = await this.usersService.create(createAuthDto.user);
-    const address = await this.addressService.create(createAuthDto.address);
 
     const token = await this.login({ id: user.id, email: user.email });
 
     return {
       user: {
         ...user,
-        address,
       },
       token,
     };
   }
 
-  // TODO: use tokenService, sessionsService
+  // TODO: use tokenService, sessionsService; add loginDto.
   async login(user: IUser) {
     // const session = this.sessionService.create(user.id, data);
 

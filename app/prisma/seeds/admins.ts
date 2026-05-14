@@ -30,7 +30,6 @@ export async function seedAdmins(prisma: PrismaClient) {
     data: {
       userId: admin.id,
       rating: 0,
-      balance: 0,
     },
   });
 

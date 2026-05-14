@@ -34,6 +34,7 @@ export class WalletController {
     return this.walletService.getBalance(id);
   }
 
+  // TODO: add param waletId
   @Post('deposit')
   async deposit(@Body() dto: DepositDto) {
     return this.walletService.deposit(dto);

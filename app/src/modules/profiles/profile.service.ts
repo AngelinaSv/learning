@@ -3,7 +3,6 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 import { isFiniteNumber } from 'src/common/utils/number.utils';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -37,25 +36,25 @@ export class ProfileService {
     });
   }
 
-  async changeBalance(userId: string, delta: number | string | Prisma.Decimal) {
-    const profile = await this.requireProfile(userId);
-    const amount =
-      delta instanceof Prisma.Decimal ? delta : new Prisma.Decimal(delta);
+  // async changeBalance(userId: string, delta: number | string | Prisma.Decimal) {
+  //   const profile = await this.requireProfile(userId);
+  //   const amount =
+  //     delta instanceof Prisma.Decimal ? delta : new Prisma.Decimal(delta);
 
-    const updated = await this.prisma.profile.update({
-      where: { userId: profile.userId },
-      data: {
-        balance: { increment: amount },
-      },
-    });
+  //   const updated = await this.prisma.profile.update({
+  //     where: { userId: profile.userId },
+  //     data: {
+  //       balance: { increment: amount },
+  //     },
+  //   });
 
-    return updated.balance;
-  }
+  //   return updated.balance;
+  // }
 
-  async getBalance(userId: string) {
-    const profile = await this.requireProfile(userId);
-    return profile.balance;
-  }
+  // async getBalance(userId: string) {
+  //   const profile = await this.requireProfile(userId);
+  //   return profile.balance;
+  // }
 
   async addExperience(userId: string, amount: number) {
     // assertFiniteNumber(amount, 'Experience amount must be a finite number');

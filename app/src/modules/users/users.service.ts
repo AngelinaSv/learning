@@ -10,11 +10,7 @@ import { UpdateUserByAdminDto } from '../admin/dto/update-user-by-admin.dto';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly profilesService: PrismaService,
-    // private readonly addressService: AddressesService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(data: CreateUserDto) {
     const existingUser = await this.userExists(data.email);
@@ -29,7 +25,6 @@ export class UsersService {
         profile: {
           create: {
             rating: 0,
-            balance: 0,
             level: 0,
           },
         },
@@ -104,7 +99,6 @@ export class UsersService {
               update: {
                 rating: data.profile.rating,
                 level: data.profile.level,
-                balance: data.profile.balance,
               },
             }
           : undefined,

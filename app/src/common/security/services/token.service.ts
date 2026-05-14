@@ -2,7 +2,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { Role } from '@prisma/client';
+import { Role } from '@generated/prisma/client';
 
 @Injectable()
 export class TokenService {

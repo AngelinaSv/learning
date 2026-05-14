@@ -1,7 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import * as crypto from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service';
-import { WalletService } from '../wallet/wallet.service';
 import { SpinRouletteDto } from './dto/spin-roulette.dto';
 import { RouletteBetType } from '@generated/prisma/client';
 import { BetStrategy } from './types/roulette.types';
@@ -16,10 +15,7 @@ import {
 
 @Injectable()
 export class RouletteService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly walletService: WalletService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async createSession(userId: string) {
     const serverSeed = crypto.randomBytes(32).toString('hex');
@@ -132,7 +128,7 @@ export class RouletteService {
       throw new BadRequestException('Game session not found');
     }
 
-    await this.walletService.debit(userId, dto.amount);
+    // await this.walletService.debit(userId, dto.amount);
 
     const result = this.generateResult(
       session.serverSeed,
@@ -147,9 +143,9 @@ export class RouletteService {
     const payout = isWin ? dto.amount * multiplier : 0;
     const profit = payout - dto.amount;
 
-    if (payout > 0) {
-      await this.walletService.credit(userId, payout);
-    }
+    // if (payout > 0) {
+    //   await this.walletService.credit(userId, payout);
+    // }
 
     await this.prisma.rouletteBet.create({
       data: {

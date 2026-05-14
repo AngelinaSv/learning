@@ -7,13 +7,15 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { DepositDto } from './dto/deposit.dto';
 
 @Injectable()
 export class WalletService {
   constructor(private prisma: PrismaService) {}
 
-  async createWallet(userId: number, currency: string = 'UAH') {
+  async createWallet(userId: string, currency: string = 'UAH') {
     return this.prisma.wallet.create({
       data: {
         userId,
@@ -39,7 +41,7 @@ export class WalletService {
     return wallet;
   }
 
-  async deposit(dto: { id: string; amount: number }) {
+  async deposit(dto: DepositDto) {
     const amount = new Prisma.Decimal(dto.amount);
 
     if (amount.lte(0)) {
@@ -47,7 +49,7 @@ export class WalletService {
     }
 
     return this.prisma.wallet.update({
-      where: { id: dto.id },
+      where: { id: dto.walletId },
       data: {
         balance: {
           increment: amount,

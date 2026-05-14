@@ -149,8 +149,4 @@ export class UsersService {
   async findOneByEmail(email: string) {
     return this.prisma.user.findUnique({ where: { email } });
   }
-
-  // async updateAvatar(userId: string, avatar: string) {
-  //   return await this.profilesService.updateAvatar(userId, avatar);
-  // }
 }

@@ -10,6 +10,8 @@ import { PrismaModule } from './modules/prisma/prisma.module';
 import { RouletteModule } from './modules/roulette/roulette.module';
 import { SessionsModule } from './modules/sessions/sessions.module';
 import { ProfilesModule } from './modules/profiles/profiles.module';
+import { WalletModule } from './modules/wallet/wallet.module';
+import { WalletModule } from './modules/wallet/wallet.module';
 
 @Module({
   imports: [
@@ -24,6 +26,7 @@ import { ProfilesModule } from './modules/profiles/profiles.module';
     PrismaModule,
     AddressesModule,
     ProfilesModule,
+    WalletModule,
   ],
   controllers: [AppController],
   providers: [AppService],

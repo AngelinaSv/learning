@@ -1,112 +1,247 @@
-import { Injectable } from '@nestjs/common';
-import { CreateRouletteDto } from './dto/spin-roulette.dto';
-import { UpdateRouletteDto } from './dto/update-roulette.dto';
-
+import { BadRequestException, Injectable } from '@nestjs/common';
 import * as crypto from 'node:crypto';
-
 import { PrismaService } from '../prisma/prisma.service';
-import { GameSession, Prisma } from '../../prisma/generated/prisma/client';
-
 import { WalletService } from '../wallet/wallet.service';
-
-const GameRoom = '295d2985-2d44-4feb-8fa0-5e0c01ffd9f3';
-
-const generateResult = (
-  serverSeed: string,
-  clientSeed: string,
-  nonce: number,
-) => {
-  const hmac = crypto.createHmac('sha256', serverSeed);
-  hmac.update(`${clientSeed}:${nonce}`);
-
-  const hash = hmac.digest('hex');
-  const partialHash = hash.substring(0, 8);
-  const intValue = parseInt(partialHash, 16);
-
-  return intValue % 37;
-};
+import { SpinRouletteDto } from './dto/spin-roulette.dto';
+import { RouletteBetType } from '@generated/prisma/client';
+import { BetStrategy } from './types/roulette.types';
+import {
+  isColorBet,
+  isColumnBet,
+  isDozenBet,
+  isEvenOddBet,
+  isNumberBet,
+  isRangeBet,
+} from './utils/roulette.helpers';
 
 @Injectable()
 export class RouletteService {
   constructor(
-    private prisma: PrismaService,
-    private walletService: WalletService,
+    private readonly prisma: PrismaService,
+    private readonly walletService: WalletService,
   ) {}
 
-  async create() {
+  async createSession(userId: string) {
     const serverSeed = crypto.randomBytes(32).toString('hex');
     const serverHash = crypto
       .createHash('sha256')
       .update(serverSeed)
       .digest('hex');
+
     const gameRoom = await this.prisma.gameSession.create({
       data: {
+        userId,
         serverSeed,
         serverHash,
-        clientSeed: '12345', // Replace with actual client seed
-        userId: 6,
+        clientSeed: 'default',
       },
     });
-    // GameRoom = gameRoom.id;
+
     return { success: true, gameRoom };
   }
 
-  findAll() {
-    const gameSessions = this.prisma.gameSession.findMany();
+  async findAllSessions(userId: string) {
+    const gameSessions = await this.prisma.gameSession.findMany({
+      where: { userId },
+    });
     return gameSessions;
   }
 
-  async spinOne(GameRoom: string, bet: number, betAmount: number) {
-    const gameSession = await this.prisma.gameSession.findUnique({
-      where: { id: GameRoom },
+  async getCurrentSession(userId: string) {
+    let session = await this.prisma.gameSession.findFirst({
+      where: {
+        userId,
+        status: 'ACTIVE',
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
-    if (!gameSession) {
-      return { success: false, message: 'Game session not found' };
-    }
-    const result = generateResult(
-      gameSession.serverSeed,
-      gameSession.clientSeed,
-      gameSession.nonce,
-    );
 
-    await this.prisma.gameSession.update({
-      where: { id: GameRoom },
-      data: { nonce: gameSession.nonce + 1 },
-    });
-    try {
-      const isWin = result === bet; // Replace with actual win condition
-      await this.prisma.rouletteBet.create({
+    if (!session) {
+      const serverSeed = crypto.randomBytes(32).toString('hex');
+
+      const serverHash = crypto
+        .createHash('sha256')
+        .update(serverSeed)
+        .digest('hex');
+
+      session = await this.prisma.gameSession.create({
         data: {
-          gameId: GameRoom,
-          nonce: gameSession.nonce,
-          winningNumber: result,
-          bet: bet,
-          isWin: isWin, // Replace with actual win condition
-          userId: 6, // Replace with actual user ID
-          betAmount: betAmount, // Replace with actual bet amount
+          userId,
+          serverSeed,
+          serverHash,
+          clientSeed: crypto.randomUUID(),
         },
       });
-      const balanceAction = isWin
-        ? { increment: betAmount * 36 }
-        : { decrement: betAmount };
-
-      await this.prisma.wallet.update({
-        where: { userId: 6 }, // Replace with actual user ID
-        data: { balance: balanceAction },
-      });
-    } catch (error) {
-      console.error('Error creating bet:', error);
-      throw error; // Rethrow the error after logging
     }
 
-    return { success: true, result };
+    return {
+      id: session.id,
+      serverHash: session.serverHash,
+      clientSeed: session.clientSeed,
+      nonce: session.nonce,
+      status: session.status,
+      createdAt: session.createdAt,
+    };
   }
 
-  update(id: number, updateRouletteDto: UpdateRouletteDto) {
-    return `This action updates a #${id} roulette`;
+  async finishSession(userId: string, sessionId: string) {
+    const session = await this.prisma.gameSession.findFirst({
+      where: {
+        id: sessionId,
+        userId,
+        status: 'ACTIVE',
+      },
+    });
+
+    if (!session) {
+      throw new BadRequestException('Active game session not found');
+    }
+
+    const finishedSession = await this.prisma.gameSession.update({
+      where: {
+        id: session.id,
+      },
+      data: {
+        status: 'FINISHED',
+        finishedAt: new Date(),
+      },
+    });
+
+    return {
+      success: true,
+      sessionId: finishedSession.id,
+      serverSeed: finishedSession.serverSeed,
+      serverHash: finishedSession.serverHash,
+      clientSeed: finishedSession.clientSeed,
+      nonce: finishedSession.nonce,
+      finishedAt: finishedSession.finishedAt,
+    };
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} roulette`;
+  async spin(userId: string, dto: SpinRouletteDto) {
+    const session = await this.prisma.gameSession.findFirst({
+      where: {
+        id: dto.sessionId,
+        userId,
+      },
+    });
+
+    if (!session) {
+      throw new BadRequestException('Game session not found');
+    }
+
+    await this.walletService.debit(userId, dto.amount);
+
+    const result = this.generateResult(
+      session.serverSeed,
+      session.clientSeed,
+      session.nonce,
+    );
+
+    const isWin = this.checkWin(result, dto.betType, dto.betValue);
+
+    const multiplier = dto.betType === 'NUMBER' ? 36 : 2;
+
+    const payout = isWin ? dto.amount * multiplier : 0;
+    const profit = payout - dto.amount;
+
+    if (payout > 0) {
+      await this.walletService.credit(userId, payout);
+    }
+
+    await this.prisma.rouletteBet.create({
+      data: {
+        userId,
+        gameId: session.id,
+        betType: dto.betType,
+        betValue: dto.betValue,
+        betAmount: dto.amount,
+        winningNumber: result,
+        payoutAmount: payout,
+        profit,
+        isWin,
+        nonce: session.nonce,
+      },
+    });
+
+    await this.prisma.gameSession.update({
+      where: { id: session.id },
+      data: {
+        nonce: {
+          increment: 1,
+        },
+      },
+    });
+
+    return {
+      result,
+      isWin,
+      payout,
+      profit,
+    };
   }
+
+  async getMyHistory(userId: string) {
+    return this.prisma.rouletteBet.findMany({
+      where: { userId },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: 20,
+    });
+  }
+
+  async getRating() {
+    return this.prisma.rouletteBet.groupBy({
+      by: ['userId'],
+      _sum: {
+        profit: true,
+      },
+      orderBy: {
+        _sum: {
+          profit: 'desc',
+        },
+      },
+      take: 10,
+    });
+  }
+
+  private generateResult(
+    serverSeed: string,
+    clientSeed: string,
+    nonce: number,
+  ) {
+    const hmac = crypto.createHmac('sha256', serverSeed);
+
+    hmac.update(`${clientSeed}:${nonce}`);
+
+    const hash = hmac.digest('hex');
+
+    return parseInt(hash.slice(0, 8), 16) % 37;
+  }
+
+  private checkWin(
+    result: number,
+    type: RouletteBetType,
+    value: string,
+  ): boolean {
+    const strategy = this.strategies[type];
+
+    if (!strategy) {
+      return false;
+    }
+
+    return strategy(result, value);
+  }
+
+  private readonly strategies: Record<RouletteBetType, BetStrategy> = {
+    [RouletteBetType.NUMBER]: isNumberBet,
+    [RouletteBetType.COLOR]: isColorBet,
+    [RouletteBetType.EVEN_ODD]: isEvenOddBet,
+    [RouletteBetType.DOZEN]: isDozenBet,
+    [RouletteBetType.COLUMN]: isColumnBet,
+    [RouletteBetType.RANGE]: isRangeBet,
+  };
 }

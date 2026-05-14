@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { RouletteBetType } from '@generated/prisma/client';
 
 export class SpinRouletteDto {
   @IsNotEmpty()
@@ -10,8 +11,8 @@ export class SpinRouletteDto {
   amount!: number;
 
   @IsNotEmpty()
-  @IsString()
-  betType!: string;
+  @IsEnum(RouletteBetType)
+  betType!: RouletteBetType;
 
   @IsNotEmpty()
   @IsString()

@@ -37,6 +37,7 @@ model User {
   addresses    Address[]
   gameSessions GameSession[]
   wallet       Wallet?
+  rouletteBets RouletteBet[]
 
   @@index([username])
   @@index([email])
@@ -49,7 +50,6 @@ model Profile {
   userId    String   @id @map("user_id")
   user      User     @relation(fields: [userId], references: [id])
   rating    Int      @map("rating")
-  balance   Decimal  @default(0) @map("balance") @db.Decimal(18, 6)
   avatar    String?  @map("avatar")
   level     Int      @default(0) @map("level")
   createdAt DateTime @default(now()) @map("created_at")
@@ -81,15 +81,22 @@ model Address {
   @@map("addresses")
 }
 
+enum GameSessionStatus {
+  ACTIVE
+  FINISHED
+}
+
 model GameSession {
-  id         String   @id @default(uuid())
-  userId     String   @map("user_id")
-  user       User     @relation(fields: [userId], references: [id])
-  serverSeed String   @map("server_seed")
-  serverHash String   @map("server_hash")
-  clientSeed String   @map("client_seed")
-  nonce      Int      @default(0)
-  createdAt  DateTime @default(now()) @map("created_at")
+  id         String            @id @default(uuid())
+  userId     String            @map("user_id")
+  user       User              @relation(fields: [userId], references: [id])
+  serverSeed String            @map("server_seed")
+  serverHash String            @map("server_hash")
+  clientSeed String            @map("client_seed")
+  nonce      Int               @default(0)
+  status     GameSessionStatus @default(ACTIVE)
+  createdAt  DateTime          @default(now()) @map("created_at")
+  finishedAt DateTime?         @map("finished_at")
 
   bets RouletteBet[]
 
@@ -97,19 +104,34 @@ model GameSession {
   @@map("game_sessions")
 }
 
-model RouletteBet {
-  id            String      @id @default(uuid())
-  gameId        String      @map("game_id")
-  betType       String      @map("bet_type")
-  betAmount     Int         @map("bet_amount")
-  winningNumber Int         @map("winning_number")
-  payoutAmount  Int         @map("payout_amount")
-  isWin         Boolean     @map("is_win")
-  nonce         Int
-  createdAt     DateTime    @default(now()) @map("created_at")
-  gameSession   GameSession @relation(fields: [gameId], references: [id])
+enum RouletteBetType {
+  NUMBER
+  COLOR
+  EVEN_ODD
+  DOZEN
+  COLUMN
+  RANGE
+}
 
+model RouletteBet {
+  id            String          @id @default(uuid())
+  userId        String          @map("user_id")
+  user          User            @relation(fields: [userId], references: [id])
+  gameId        String          @map("game_id")
+  gameSession   GameSession     @relation(fields: [gameId], references: [id])
+  betType       RouletteBetType @map("bet_type")
+  betValue      String          @map("bet_value")
+  betAmount     Decimal         @db.Decimal(18, 6)
+  winningNumber Int             @map("winning_number")
+  payoutAmount  Decimal         @db.Decimal(18, 6)
+  profit        Decimal         @db.Decimal(18, 6)
+  isWin         Boolean         @map("is_win")
+  nonce         Int
+  createdAt     DateTime        @default(now()) @map("created_at")
+
+  @@index([userId])
   @@index([gameId])
+  @@index([createdAt])
   @@map("roulette_bets")
 }
 
@@ -127,14 +149,12 @@ enum TransactionStatus {
 }
 
 model Wallet {
-  id     String @id @default(uuid())
-  userId String @unique @map("user_id")
-  user   User   @relation(fields: [userId], references: [id])
-
-  balance  Decimal @default(0) @db.Decimal(18, 6)
-  currency String  @default("UAH")
-  isActive Boolean @default(true) @map("is_active")
-
+  id        String   @id @default(uuid())
+  userId    String   @unique @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  balance   Decimal  @default(0) @db.Decimal(18, 6)
+  currency  String   @default("UAH")
+  isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -145,21 +165,17 @@ model Wallet {
 }
 
 model Transaction {
-  id       String @id @default(uuid())
-  walletId String @map("wallet_id")
-  wallet   Wallet @relation(fields: [walletId], references: [id])
-
-  type   TransactionType
-  status TransactionStatus @default(PENDING)
-
-  amount Decimal @db.Decimal(18, 6)
-
-  idempotencyKey String? @unique @map("idempotency_key")
-  referenceId    String? @map("reference_id")
+  id             String            @id @default(uuid())
+  walletId       String            @map("wallet_id")
+  wallet         Wallet            @relation(fields: [walletId], references: [id])
+  type           TransactionType
+  status         TransactionStatus @default(PENDING)
+  amount         Decimal           @db.Decimal(18, 6)
+  idempotencyKey String?           @unique @map("idempotency_key")
+  referenceId    String?           @map("reference_id")
   description    String?
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
 
   @@index([walletId])
   @@index([createdAt])

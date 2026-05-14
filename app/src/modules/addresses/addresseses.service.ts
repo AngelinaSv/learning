@@ -7,7 +7,7 @@ import { UpdateAddressDto } from './dto/update-address.dto';
 export class AddressesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(data: CreateAddressDto) {
+  async create(userId: string, data: CreateAddressDto) {
     const address = await this.prisma.address.create({
       data,
     });
@@ -15,9 +15,9 @@ export class AddressesService {
     return address;
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, userId: string) {
     const address = await this.prisma.address.findUnique({
-      where: { id },
+      where: { id, userId },
     });
 
     if (!address) {
@@ -26,8 +26,16 @@ export class AddressesService {
     return address;
   }
 
-  async update(id: string, data: UpdateAddressDto) {
-    const address = await this.findOne(id);
+  async findAllForUser(userId: string) {
+    const addresses = await this.prisma.address.findMany({
+      where: { userId },
+    });
+
+    return addresses;
+  }
+
+  async update(id: string, userId: string, data: UpdateAddressDto) {
+    const address = await this.findOne(id, userId);
 
     if (!address) {
       throw new NotFoundException();
@@ -42,8 +50,8 @@ export class AddressesService {
     return updated;
   }
 
-  async remove(id: string) {
-    const address = await this.findOne(id);
+  async remove(id: string, userId: string) {
+    const address = await this.findOne(id, userId);
     return this.prisma.address.delete({ where: { id: address.id } });
   }
 

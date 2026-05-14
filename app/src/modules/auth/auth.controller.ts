@@ -1,28 +1,45 @@
-import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { CurrentUserId } from 'src/common/authorization/decorators/current-user.decorator';
+import { CurrentUserId } from 'src/common/security/decorators/current-user.decorator';
+import { SignInDto } from './dto/sign-in.dto';
+import { AuthCookieService } from './auth-cookie.service';
+import type { Response } from 'express';
+import { SignUpDto } from './dto/sign-up.dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly authCookieService: AuthCookieService,
+  ) {}
 
   @Post('sign-up')
-  async register(@Body() createAuthDto: CreateAuthDto) {
-    return this.authService.create(createAuthDto);
+  async register(@Body() body: SignUpDto) {
+    return this.authService.create(body);
   }
 
-  @UseGuards(LocalAuthGuard)
   @Post('sign-in')
-  async login(@Request() req) {
-    return this.authService.login(req.user);
+  async login(
+    @Body() body: SignInDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    console.log('body', body);
+    const loggedUser = await this.authService.login(body);
+    this.authCookieService.setAuthCookie(res, loggedUser.accessToken);
+
+    return loggedUser;
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('sign-out')
-  async logout(@CurrentUserId() userId: string) {
-    return this.authService.logout(userId);
+  async logout(
+    @CurrentUserId() userId: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const logoutMessage = await this.authService.logout(userId);
+    this.authCookieService.clearAuthCookie(res);
+
+    return logoutMessage;
   }
 }

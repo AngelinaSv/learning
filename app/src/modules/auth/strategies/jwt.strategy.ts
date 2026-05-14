@@ -36,7 +36,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: DecodedJwtPayload) {
+    console.log('payload', payload);
     const { sub: userId, sessionId } = payload;
+    console.log('userId', userId);
 
     // const sessionExists = await this.sessionService.checkSession(
     //   sessionId,
@@ -46,7 +48,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     // if (!sessionExists) {
     //   throw new UnauthorizedException();
     // }
-
+    console.log('userId 2', userId);
     const user = await this.userService.findOne(userId);
 
     if (!user) {
@@ -60,7 +62,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     return {
       id: user.id,
       role: user.role,
-      sessionId,
+      // sessionId,
       isBanned: user.isBanned,
     };
   }

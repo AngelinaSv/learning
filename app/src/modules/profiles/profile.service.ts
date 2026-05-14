@@ -3,17 +3,13 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { Prisma } from '../../generated/prisma/client';
+import { Prisma } from '@prisma/client';
 import { isFiniteNumber } from 'src/common/utils/number.utils';
 import { PrismaService } from '../prisma/prisma.service';
-import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class ProfileService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly usersService: UsersService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   private async requireProfile(userId: string) {
     const profile = await this.prisma.profile.findUnique({

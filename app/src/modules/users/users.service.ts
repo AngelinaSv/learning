@@ -6,14 +6,12 @@ import {
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from '../prisma/prisma.service';
-import { PasswordHashService } from 'src/common/security/services/password-hash.service';
 import { UpdateUserByAdminDto } from '../admin/dto/update-user-by-admin.dto';
 
 @Injectable()
 export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly passwordHashService: PasswordHashService,
     private readonly profilesService: PrismaService,
     // private readonly addressService: AddressesService,
   ) {}
@@ -25,12 +23,9 @@ export class UsersService {
       throw new ConflictException('User with this email already exists');
     }
 
-    const hashedPassword = await this.passwordHashService.hash(data.password);
-
     const user = await this.prisma.user.create({
       data: {
         ...data,
-        password: hashedPassword,
         profile: {
           create: {
             rating: 0,
@@ -73,6 +68,8 @@ export class UsersService {
   }
 
   async findOne(id: string) {
+    console.log('??');
+    console.log('id', id);
     const user = await this.prisma.user.findUnique({
       where: { id },
       // include: {
@@ -150,9 +147,7 @@ export class UsersService {
   }
 
   async findOneByEmail(email: string) {
-    const user = await this.prisma.user.findUnique({ where: { email } });
-
-    return user;
+    return this.prisma.user.findUnique({ where: { email } });
   }
 
   // async updateAvatar(userId: string, avatar: string) {

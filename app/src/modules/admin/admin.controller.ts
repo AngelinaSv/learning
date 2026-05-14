@@ -9,8 +9,8 @@ import {
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { UserRole } from '../users/enums/user-role.enum';
-import { Roles } from 'src/common/authorization/decorators/roles.decorator';
-import { RolesGuard } from 'src/common/authorization/guards/roles.guard';
+import { Roles } from 'src/common/security/decorators/roles.decorator';
+import { RolesGuard } from 'src/common/security/guards/roles.guard';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UpdateUserByAdminDto } from './dto/update-user-by-admin.dto';
 @Roles(UserRole.ADMIN)
@@ -31,6 +31,7 @@ export class AdminController {
     return user;
   }
 
+  // TODO: move userId to body
   @Patch('users/:id/ban')
   banUser(@Param('id') id: string, @Body() data: UpdateUserByAdminDto) {
     return this.adminService.ban(id, data);

@@ -5,10 +5,7 @@ import { UsersService } from 'src/modules/users/users.service';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(
-    private readonly reflector: Reflector,
-    private readonly usersService: UsersService,
-  ) {}
+  constructor(private readonly reflector: Reflector) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const requiredRoles = this.reflector.get<string[]>(
@@ -27,8 +24,6 @@ export class RolesGuard implements CanActivate {
       throw new UnauthorizedException();
     }
 
-    const dbUser = await this.usersService.findOne(user.id);
-
-    return requiredRoles.includes(dbUser.role);
+    return requiredRoles.includes(user.role);
   }
 }

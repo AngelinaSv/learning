@@ -9,14 +9,16 @@ import {
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CurrentUserId } from 'src/common/authorization/decorators/current-user.decorator';
+import { CurrentUserId } from 'src/common/security/decorators/current-user.decorator';
+
+@UseGuards(JwtAuthGuard)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Get('me')
   findOne(@CurrentUserId() userId: string) {
+    console.log('currentUserId', userId);
     return this.usersService.findOne(userId);
   }
 

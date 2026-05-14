@@ -1,54 +1,36 @@
 {
   "compilerOptions": {
-    "target": "ES2023",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "target": "es2023",
     "lib": [
-      "ES2023"
+      "es2023"
     ],
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": false, // Enabling this ensures that type definitions are checked for compatibility, which can help catch issues early.
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true,
-    "resolvePackageJsonExports": true,
-    "sourceMap": true,
-    "inlineSourceMap": false,
+    "module": "CommonJS",
     "declaration": true,
-    "declarationMap": true,
-    "isolatedModules": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "incremental": true,
-    "strictNullChecks": true,
-    "noImplicitAny": false,
-    "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false,
-    "baseUrl": ".",
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
     "paths": {
-      "@/models/*": [
-        "src/models/*"
-      ],
-      "@/utils/*": [
-        "src/utils/*"
-      ],
-      "@/components/*": [
-        "src/components/*"
-      ],
       "@generated/*": [
         "generated/*"
       ]
-    }
-  },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-  ]
+    },
+    "incremental": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "strictNullChecks": true,
+    "noImplicitAny": true,
+    "strictBindCallApply": false,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "esModuleInterop": true,
+    "inlineSources": true,
+    "typeRoots": [
+      "./src/types",
+      "./node_modules/@types"
+    ]
+  }
 }

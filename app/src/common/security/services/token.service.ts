@@ -1,8 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-
-import { UserRole } from '../../../modules/users/enums/user-role.enum';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class TokenService {
@@ -11,20 +11,18 @@ export class TokenService {
     private readonly jwtService: JwtService,
   ) {}
 
-  generate(userId: string, role: UserRole): string {
-    const accessTokenSecret = this.configService.getOrThrow(
-      'ACCESS_TOKEN_SECRET',
-    );
-    const accessTokenTime = parseInt(
-      this.configService.getOrThrow('ACCESS_TOKEN_TIME'),
+  generate(userId: string, role: Role): string {
+    const secret = this.configService.getOrThrow('ACCESS_TOKEN_SECRET');
+    const expiresIn = parseInt(
+      this.configService.getOrThrow('TOKEN_EXPIRES_IN'),
       10,
     );
 
-    const payload = { id: userId, role };
+    const payload = { sub: userId, role };
 
     return this.jwtService.sign(payload, {
-      secret: accessTokenSecret,
-      expiresIn: accessTokenTime,
+      secret,
+      expiresIn,
     });
   }
 }

@@ -1,5 +1,4 @@
-import { IsNotEmpty } from 'class-validator/types/decorator/common/IsNotEmpty';
-import { IsString } from 'class-validator/types/decorator/typechecker/IsString';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateAddressDto {
   @IsString()

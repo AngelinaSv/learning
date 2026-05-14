@@ -1,62 +1,93 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { CreateAuthDto } from './dto/create-auth.dto';
+import {
+  Injectable,
+  UnauthorizedException,
+  ForbiddenException,
+  ConflictException,
+} from '@nestjs/common';
 import { UsersService } from '../users/users.service';
-import { JwtService } from '@nestjs/jwt';
+// import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcrypt';
-import { IUser } from 'src/common/types/types';
+import { SignInDto } from './dto/sign-in.dto';
+import { TokenService } from 'src/common/security/services/token.service';
+import { SignUpDto } from './dto/sign-up.dto';
+import { PasswordHashService } from 'src/common/security/services/password-hash.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
-    private readonly jwtService: JwtService,
+    // private readonly jwtService: JwtService,
+    private readonly tokenService: TokenService,
+    private readonly passwordHashService: PasswordHashService,
   ) {}
   // TODO:
   async validateUser(email: string, pass: string): Promise<any> {
     const user = await this.usersService.findOneByEmail(email);
-    const passwordIsMathc = await bcrypt.compare(pass, user?.password);
 
-    if (user && passwordIsMathc) {
-      return user;
+    const passwordIsMathc = await bcrypt.compare(pass, user!.password);
+
+    if (!user || !passwordIsMathc) {
+      throw new UnauthorizedException();
     }
 
-    throw new UnauthorizedException();
+    if (user.isBanned) {
+      throw new ForbiddenException();
+    }
+
+    return user;
   }
 
-  async create(createAuthDto: CreateAuthDto) {
-    const existsUser = await this.usersService.findOneByEmail(
-      createAuthDto.user.email,
-    );
+  async create(data: SignUpDto) {
+    const existsUser = await this.usersService.findOneByEmail(data.email);
 
     if (existsUser) {
-      throw new UnauthorizedException('User with this email already exists');
+      throw new ConflictException('User with this email already exists');
     }
 
-    const user = await this.usersService.create(createAuthDto.user);
+    const hashedPassword = await this.passwordHashService.hash(data.password);
 
-    const token = await this.login({ id: user.id, email: user.email });
+    const user = await this.usersService.create({
+      ...data,
+      password: hashedPassword,
+    });
 
     return {
-      user: {
-        ...user,
-      },
-      token,
+      user,
     };
   }
 
   // TODO: use tokenService, sessionsService; add loginDto.
-  async login(user: IUser) {
+  async login(data: SignInDto) {
+    const { email, password } = data;
     // const session = this.sessionService.create(user.id, data);
+    const user = await this.usersService.findOneByEmail(email);
+
+    const passwordIsMathc = await this.passwordHashService.compare(
+      password,
+      user!.password,
+    );
+    console.log('user', user);
+    console.log('passwordIsMathc', passwordIsMathc);
+    if (!user || !passwordIsMathc) {
+      throw new UnauthorizedException();
+    }
+
+    if (user.isBanned) {
+      throw new ForbiddenException();
+    }
+
+    const accessToken = this.tokenService.generate(user.id, user.role);
 
     return {
-      id: user.id,
-      email: user.email,
-      access_token: this.jwtService.sign({ email: user.email, sub: user.id }),
+      user,
+      accessToken,
+      // access_token: this.jwtService.sign({ email: user.email, sub: user.id }),
       // sessionId,
     };
   }
 
   async logout(userId: string) {
     // await this.sessionService.remove(user.id, sessionId);
+    return { message: 'Signout success' };
   }
 }

@@ -56,7 +56,7 @@ export class AuthService {
     };
   }
 
-  // TODO: use tokenService, sessionsService; add loginDto.
+
   async login(data: SignInDto) {
     const { email, password } = data;
     // const session = this.sessionService.create(user.id, data);

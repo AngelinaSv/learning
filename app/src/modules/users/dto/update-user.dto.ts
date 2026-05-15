@@ -1,11 +1,11 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateUserDto } from './create-user.dto';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
-// TOTO: separate profile update to a different DTO
 export class UpdateUserDto extends PartialType(CreateUserDto) {
-  profile?: {
-    rating?: number;
-    balance?: number;
-    level?: number;
-  };
+  @ApiPropertyOptional()
+  email?: string;
+
+  @ApiPropertyOptional()
+  username?: string;
 }

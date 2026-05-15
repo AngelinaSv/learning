@@ -92,14 +92,6 @@ export class UsersService {
       data: {
         email: data.email,
         username: data.username,
-        profile: data.profile
-          ? {
-              update: {
-                rating: data.profile.rating,
-                level: data.profile.level,
-              },
-            }
-          : undefined,
       },
       include: {
         profile: true,

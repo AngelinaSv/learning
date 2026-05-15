@@ -6,7 +6,14 @@ import { SignInDto } from './dto/sign-in.dto';
 import { AuthCookieService } from './auth-cookie.service';
 import type { Response } from 'express';
 import { SignUpDto } from './dto/sign-up.dto';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -15,11 +22,15 @@ export class AuthController {
   ) {}
 
   @Post('sign-up')
+  @ApiOperation({ summary: 'Register a new user' })
+  @ApiResponse({ status: 201, description: 'User successfully registered' })
   async register(@Body() body: SignUpDto) {
     return this.authService.create(body);
   }
 
   @Post('sign-in')
+  @ApiOperation({ summary: 'Login user' })
+  @ApiResponse({ status: 200, description: 'User successfully logged in' })
   async login(
     @Body() body: SignInDto,
     @Res({ passthrough: true }) res: Response,
@@ -32,6 +43,9 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Post('sign-out')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Logout user' })
+  @ApiResponse({ status: 200, description: 'User successfully logged out' })
   async logout(
     @CurrentUserId() userId: string,
     @Res({ passthrough: true }) res: Response,

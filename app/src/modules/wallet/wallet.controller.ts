@@ -37,8 +37,8 @@ export class WalletController {
   // TODO: add param waletId
   @Post('deposit')
   async deposit(@Param('id') id: string, @Body() dto: DepositDto) {
-    const amountDecimal = new Prisma.Decimal(id, dto.amount);
-    return this.transactionService.processDeposit({
+    const amountDecimal = new Prisma.Decimal(dto.amount);
+    return this.transactionService.processDeposit(id, {
       ...dto,
       amount: amountDecimal,
     });

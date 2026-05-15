@@ -1,6 +1,6 @@
-FROM node:22 AS base
+FROM node:22
 
-WORKDIR /app
+WORKDIR /usr/src/app
 
 COPY package*.json ./
 RUN npm install
@@ -9,5 +9,6 @@ COPY . .
 
 RUN npx prisma generate
 
-FROM base AS development
+EXPOSE 3009
+
 CMD ["npm", "run", "start:dev"]

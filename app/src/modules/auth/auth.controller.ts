@@ -24,7 +24,6 @@ export class AuthController {
     @Body() body: SignInDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    console.log('body', body);
     const loggedUser = await this.authService.login(body);
     this.authCookieService.setAuthCookie(res, loggedUser.accessToken);
 

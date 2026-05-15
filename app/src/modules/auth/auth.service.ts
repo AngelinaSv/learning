@@ -66,8 +66,7 @@ export class AuthService {
       password,
       user!.password,
     );
-    console.log('user', user);
-    console.log('passwordIsMathc', passwordIsMathc);
+
     if (!user || !passwordIsMathc) {
       throw new UnauthorizedException();
     }

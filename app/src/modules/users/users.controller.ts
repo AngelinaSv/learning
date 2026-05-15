@@ -18,7 +18,6 @@ export class UsersController {
 
   @Get('me')
   findOne(@CurrentUserId() userId: string) {
-    console.log('currentUserId', userId);
     return this.usersService.findOne(userId);
   }
 

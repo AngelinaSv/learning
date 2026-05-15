@@ -36,8 +36,12 @@ export class WalletController {
 
   // TODO: add param waletId
   @Post('deposit')
-  async deposit(@Body() dto: DepositDto) {
-    return this.walletService.deposit(dto);
+  async deposit(@Param('id') id: string, @Body() dto: DepositDto) {
+    const amountDecimal = new Prisma.Decimal(id, dto.amount);
+    return this.transactionService.processDeposit({
+      ...dto,
+      amount: amountDecimal,
+    });
   }
 
   @Patch(':id/status')
@@ -53,11 +57,10 @@ export class WalletController {
   async withdraw(@Param('id') id: string, @Body() dto: WithdrawDto) {
     const amountDecimal = new Prisma.Decimal(dto.amount);
 
-    return this.transactionService.processWithdrawal(
-      id,
-      amountDecimal,
-      dto.idempotencyKey,
-    );
+    return this.transactionService.processWithdrawal(id, {
+      amount: amountDecimal,
+      idempotencyKey: dto.idempotencyKey,
+    });
   }
 
   @Get(':id/history')

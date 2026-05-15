@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 import {
   BadRequestException,
   ConflictException,
@@ -13,16 +10,16 @@ import {
   TransactionType,
   TransactionStatus,
 } from '@generated/prisma/client';
+import { DepositDto } from './dto/deposit.dto';
+import { WithdrawDto } from './dto/withdraw.dto';
 
 @Injectable()
 export class TransactionService {
   constructor(private prisma: PrismaService) {}
 
-  async processWithdrawal(
-    walletId: string,
-    amount: Prisma.Decimal,
-    idempotencyKey: string,
-  ) {
+  async processWithdrawal(walletId: string, dto: WithdrawDto) {
+    const { amount, idempotencyKey } = dto;
+
     const existing = await this.prisma.transaction.findUnique({
       where: { idempotencyKey },
     });
@@ -65,6 +62,46 @@ export class TransactionService {
       });
 
       return transaction;
+    });
+  }
+
+  async processDeposit(walletId: string, dto: DepositDto) {
+    const amount = new Prisma.Decimal(dto.amount);
+
+    if (amount.lte(0)) {
+      throw new BadRequestException('Amount must be > 0');
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const wallet = await tx.wallet.findUnique({
+        where: { id: walletId },
+      });
+
+      if (!wallet || !wallet.isActive) {
+        throw new BadRequestException('Wallet not available');
+      }
+
+      const depositTx = await tx.transaction.create({
+        data: {
+          walletId: walletId,
+          type: 'DEPOSIT',
+          status: 'COMPLETED',
+          amount,
+          description: 'Deposit funds',
+          idempotencyKey: dto.idempotencyKey, // если добавишь (очень желательно)
+        },
+      });
+
+      await tx.wallet.update({
+        where: { id: walletId },
+        data: {
+          balance: {
+            increment: amount,
+          },
+        },
+      });
+
+      return depositTx;
     });
   }
 

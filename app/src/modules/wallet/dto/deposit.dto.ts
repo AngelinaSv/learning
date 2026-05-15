@@ -1,11 +1,12 @@
+import { Prisma } from '@generated/prisma/client';
 import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class DepositDto {
   @IsNotEmpty()
   @IsString()
-  walletId!: string;
+  idempotencyKey!: string;
 
   @IsNotEmpty()
   @IsNumber()
-  amount!: number;
+  amount!: Prisma.Decimal;
 }

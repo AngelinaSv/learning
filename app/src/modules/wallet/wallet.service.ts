@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/require-await */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Injectable,
   BadRequestException,
@@ -39,23 +35,6 @@ export class WalletService {
     }
 
     return wallet;
-  }
-
-  async deposit(dto: DepositDto) {
-    const amount = new Prisma.Decimal(dto.amount);
-
-    if (amount.lte(0)) {
-      throw new BadRequestException('Amount must be > 0');
-    }
-
-    return this.prisma.wallet.update({
-      where: { id: dto.walletId },
-      data: {
-        balance: {
-          increment: amount,
-        },
-      },
-    });
   }
 
   // For future

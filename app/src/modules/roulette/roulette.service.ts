@@ -128,8 +128,6 @@ export class RouletteService {
       throw new BadRequestException('Game session not found');
     }
 
-    // await this.walletService.debit(userId, dto.amount);
-
     const result = this.generateResult(
       session.serverSeed,
       session.clientSeed,

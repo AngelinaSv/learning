@@ -1,17 +1,6 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  HttpStatus,
-  HttpCode,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, UseGuards } from '@nestjs/common';
 import { WalletService } from './wallet.service';
 import { DepositDto } from './dto/deposit.dto';
-import { WithdrawDto } from './dto/withdraw.dto';
 import { Prisma } from '@generated/prisma/client';
 import { TransactionService } from './transaction.service';
 import {
@@ -69,34 +58,4 @@ export class WalletController {
   }
 
   // TODO: Add withdrawal and dispute endpoints, implement idempotency and error handling in service methods
-
-  // @Post('withdraw')
-  // @HttpCode(HttpStatus.OK)
-  // @ApiOperation({ summary: 'Withdraw funds from wallet' })
-  // @ApiResponse({ status: 200, description: 'Withdrawal successful' })
-  // async withdraw(@CurrentUserId() userId: string, @Body() dto: WithdrawDto) {
-  //   const amountDecimal = new Prisma.Decimal(dto.amount);
-
-  //   return this.transactionService.processWithdrawal(userId, {
-  //     amount: amountDecimal,
-  //     idempotencyKey: dto.idempotencyKey,
-  //   });
-  // }
-
-  // @Post('transactions/:id/refund')
-  // @HttpCode(HttpStatus.OK)
-  // @ApiOperation({ summary: 'Refund a transaction' })
-  // @ApiResponse({ status: 200, description: 'Refund successful' })
-  // @ApiParam({ name: 'id', description: 'Transaction ID' })
-  // async refundTransaction(@Param('id') txId: string) {
-  //   return this.transactionService.processRefund(txId);
-  // }
-
-  // @Post('transactions/:id/dispute')
-  // @ApiOperation({ summary: 'Dispute a transaction' })
-  // @ApiResponse({ status: 200, description: 'Transaction marked as disputed' })
-  // @ApiParam({ name: 'id', description: 'Transaction ID' })
-  // async dispute(@Param('id') txId: string) {
-  //   return this.transactionService.markAsDisputed(txId);
-  // }
 }

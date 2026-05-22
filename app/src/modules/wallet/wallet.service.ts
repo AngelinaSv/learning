@@ -5,20 +5,10 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { DepositDto } from './dto/deposit.dto';
 
 @Injectable()
 export class WalletService {
   constructor(private prisma: PrismaService) {}
-
-  async createWallet(userId: string, currency: string = 'UAH') {
-    return this.prisma.wallet.create({
-      data: {
-        userId,
-        currency,
-      },
-    });
-  }
 
   async getBalance(walletId: string) {
     const wallet = await this.prisma.wallet.findUnique({

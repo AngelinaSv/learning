@@ -3,17 +3,16 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   HttpStatus,
   HttpCode,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { WalletService } from './wallet.service';
 import { DepositDto } from './dto/deposit.dto';
 import { WithdrawDto } from './dto/withdraw.dto';
 import { Prisma } from '@generated/prisma/client';
-import { CreateWalletDto } from './dto/create-wallet.dto';
 import { TransactionService } from './transaction.service';
 import {
   ApiTags,
@@ -21,9 +20,14 @@ import {
   ApiResponse,
   ApiParam,
   ApiQuery,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
+import { CurrentUserId } from 'src/common/security/decorators/current-user.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('wallet')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('wallet')
 export class WalletController {
   constructor(
@@ -31,15 +35,7 @@ export class WalletController {
     private readonly transactionService: TransactionService,
   ) {}
 
-  @Post()
-  @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Create a new wallet' })
-  @ApiResponse({ status: 201, description: 'Wallet successfully created' })
-  async createWallet(@Body() dto: CreateWalletDto) {
-    return this.walletService.createWallet(dto.userId, dto.currency);
-  }
-
-  @Get(':id/balance')
+  @Get('balance')
   @ApiOperation({ summary: 'Get wallet balance' })
   @ApiResponse({ status: 200, description: 'Returns the wallet balance' })
   @ApiParam({ name: 'id', description: 'Wallet ID' })
@@ -47,7 +43,6 @@ export class WalletController {
     return this.walletService.getBalance(id);
   }
 
-  // TODO: add param waletId
   @Post('deposit')
   @ApiOperation({ summary: 'Deposit funds to wallet' })
   @ApiResponse({ status: 201, description: 'Deposit successful' })
@@ -59,59 +54,54 @@ export class WalletController {
     });
   }
 
-  @Patch(':id/status')
-  @ApiOperation({ summary: 'Toggle wallet status' })
-  @ApiResponse({ status: 200, description: 'Wallet status updated' })
-  @ApiParam({ name: 'id', description: 'Wallet ID' })
-  async toggleStatus(
-    @Param('id') id: string,
-    @Body('isActive') isActive: boolean,
-  ) {
-    return this.walletService.toggleWalletStatus(id, isActive);
-  }
-
-  @Post(':id/withdraw')
+  @Post('withdraw')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Withdraw funds from wallet' })
   @ApiResponse({ status: 200, description: 'Withdrawal successful' })
-  @ApiParam({ name: 'id', description: 'Wallet ID' })
-  async withdraw(@Param('id') id: string, @Body() dto: WithdrawDto) {
+  async withdraw(@CurrentUserId() userId: string, @Body() dto: WithdrawDto) {
     const amountDecimal = new Prisma.Decimal(dto.amount);
 
-    return this.transactionService.processWithdrawal(id, {
+    return this.transactionService.processWithdrawal(userId, {
       amount: amountDecimal,
       idempotencyKey: dto.idempotencyKey,
     });
   }
 
-  @Get(':id/history')
+  @Get('transactions/history')
   @ApiOperation({ summary: 'Get wallet transaction history' })
   @ApiResponse({ status: 200, description: 'Returns transaction history' })
-  @ApiParam({ name: 'id', description: 'Wallet ID' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   async getHistory(
-    @Param('id') id: string,
+    @CurrentUserId() userId: string,
     @Query('page') page = '1',
     @Query('limit') limit = '20',
   ) {
-    return this.transactionService.getHistory(id, Number(page), Number(limit));
+    return this.transactionService.getHistory(userId, {
+      page: Number(page),
+      limit: Number(limit),
+    });
   }
 
-  @Post('transactions/:id/refund')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Refund a transaction' })
-  @ApiResponse({ status: 200, description: 'Refund successful' })
-  @ApiParam({ name: 'id', description: 'Transaction ID' })
-  async refundTransaction(@Param('id') txId: string) {
-    return this.transactionService.processRefund(txId);
-  }
+  // @Post('transactions/:id/refund')
+  // @HttpCode(HttpStatus.OK)
+  // @ApiOperation({ summary: 'Refund a transaction' })
+  // @ApiResponse({ status: 200, description: 'Refund successful' })
+  // @ApiParam({ name: 'id', description: 'Transaction ID' })
+  // async refundTransaction(@Param('id') txId: string) {
+  //   return this.transactionService.processRefund(txId);
+  // }
 
-  @Post('transactions/:id/dispute')
-  @ApiOperation({ summary: 'Dispute a transaction' })
-  @ApiResponse({ status: 200, description: 'Transaction marked as disputed' })
-  @ApiParam({ name: 'id', description: 'Transaction ID' })
-  async dispute(@Param('id') txId: string) {
-    return this.transactionService.markAsDisputed(txId);
-  }
+  // @Post('transactions/:id/dispute')
+  // @ApiOperation({ summary: 'Dispute a transaction' })
+  // @ApiResponse({ status: 200, description: 'Transaction marked as disputed' })
+  // @ApiParam({ name: 'id', description: 'Transaction ID' })
+  // async dispute(@Param('id') txId: string) {
+  //   return this.transactionService.markAsDisputed(txId);
+  // }
 }
+// function UseGuards(
+//   JwtAuthGuard: any,
+// ): (target: typeof WalletController) => void | typeof WalletController {
+//   throw new Error('Function not implemented.');
+// }

@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, UseGuards, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  UseGuards,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { RouletteService } from './roulette.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUserId } from 'src/common/security/decorators/current-user.decorator';
@@ -39,7 +47,7 @@ export class RouletteController {
     return this.rouletteService.getCurrentSession(userId);
   }
 
-  @Post('sessions/:id/finish')
+  @Delete('sessions/:id')
   @ApiOperation({ summary: 'Finish a roulette session' })
   @ApiResponse({ status: 200, description: 'Session finished' })
   @ApiParam({ name: 'id', description: 'Session ID' })

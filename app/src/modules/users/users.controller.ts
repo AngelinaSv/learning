@@ -24,11 +24,24 @@ import {
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  // @Get('')
+  // @ApiOperation({ summary: 'Get public users list' })
+  // @ApiResponse({ status: 200, description: 'Returns the current user' })
+  //   return this.usersService.getUsersList();
+  // }
+
+  // @Get(':id')
+  // @ApiOperation({ summary: 'Get user stats' })
+  // @ApiResponse({ status: 200, description: 'Returns the user stats' })
+  // getStats(@CurrentUserId() userId: string) {
+  //   return this.usersService.getStats(userId);
+  // }
+
   @Get('me')
   @ApiOperation({ summary: 'Get current user' })
   @ApiResponse({ status: 200, description: 'Returns the current user' })
   findOne(@CurrentUserId() userId: string) {
-    return this.usersService.findOne(userId);
+    return this.usersService.getMe(userId);
   }
 
   @Patch('me')
@@ -41,19 +54,23 @@ export class UsersController {
     return this.usersService.update(userId, updateUserDto);
   }
 
+  // @Patch('me/password')
+  // @ApiOperation({ summary: 'Update current user password' })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'User password successfully updated',
+  // })
+  // updatePassword(
+  //   @CurrentUserId() userId: string,
+  //   @Body() updateUserDto: UpdateUserDto,
+  // ) {
+  //   return this.usersService.updatePassword(userId, updateUserDto);
+  // }
+
   @Delete('me')
   @ApiOperation({ summary: 'Delete current user' })
   @ApiResponse({ status: 200, description: 'User successfully deleted' })
   remove(@CurrentUserId() userId: string) {
     return this.usersService.remove(userId);
   }
-
-  // @UseGuards(JwtAuthGuard)
-  // @Patch('me/avatar')
-  // updateAvatar(
-  //   @CurrentUserId() userId: string,
-  //   @Body('avatar') avatar: string | null,
-  // ) {
-  //   return this.usersService.updateAvatar(userId, avatar);
-  // }
 }

@@ -5,11 +5,6 @@ export class CreateAddressDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  userId!: string;
-
-  @ApiProperty()
-  @IsString()
-  @IsNotEmpty()
   firstName!: string;
 
   @ApiProperty()

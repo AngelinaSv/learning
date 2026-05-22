@@ -36,7 +36,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: DecodedJwtPayload) {
-    const { sub: userId, sessionId } = payload;
+    const { sub: userId } = payload;
     // const sessionExists = await this.sessionService.checkSession(
     //   sessionId,
     //   userId,

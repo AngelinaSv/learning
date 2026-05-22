@@ -12,12 +12,13 @@ import {
 } from '@generated/prisma/client';
 import { DepositDto } from './dto/deposit.dto';
 import { WithdrawDto } from './dto/withdraw.dto';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 
 @Injectable()
 export class TransactionService {
   constructor(private prisma: PrismaService) {}
 
-  async processWithdrawal(walletId: string, dto: WithdrawDto) {
+  async processWithdrawal(userId: string, dto: WithdrawDto) {
     const { amount, idempotencyKey } = dto;
 
     const existing = await this.prisma.transaction.findUnique({
@@ -30,7 +31,7 @@ export class TransactionService {
 
     return this.prisma.$transaction(async (tx) => {
       const wallet = await tx.wallet.findUnique({
-        where: { id: walletId },
+        where: { userId },
       });
 
       if (!wallet || !wallet.isActive) {
@@ -43,7 +44,7 @@ export class TransactionService {
 
       const transaction = await tx.transaction.create({
         data: {
-          walletId,
+          walletId: wallet.id,
           type: TransactionType.WITHDRAWAL,
           status: TransactionStatus.COMPLETED,
           amount,
@@ -53,7 +54,7 @@ export class TransactionService {
       });
 
       await tx.wallet.update({
-        where: { id: walletId },
+        where: { id: wallet.id },
         data: {
           balance: {
             decrement: amount,
@@ -65,7 +66,7 @@ export class TransactionService {
     });
   }
 
-  async processDeposit(walletId: string, dto: DepositDto) {
+  async processDeposit(userId: string, dto: DepositDto) {
     const amount = new Prisma.Decimal(dto.amount);
 
     if (amount.lte(0)) {
@@ -74,7 +75,7 @@ export class TransactionService {
 
     return this.prisma.$transaction(async (tx) => {
       const wallet = await tx.wallet.findUnique({
-        where: { id: walletId },
+        where: { userId },
       });
 
       if (!wallet || !wallet.isActive) {
@@ -83,7 +84,7 @@ export class TransactionService {
 
       const depositTx = await tx.transaction.create({
         data: {
-          walletId: walletId,
+          walletId: wallet.id,
           type: 'DEPOSIT',
           status: 'COMPLETED',
           amount,
@@ -93,7 +94,7 @@ export class TransactionService {
       });
 
       await tx.wallet.update({
-        where: { id: walletId },
+        where: { id: wallet.id },
         data: {
           balance: {
             increment: amount,
@@ -105,23 +106,29 @@ export class TransactionService {
     });
   }
 
-  async getHistory(walletId: string, page = 1, limit = 20) {
+  async getHistory(userId: string, data: PaginationQueryDto) {
+    const { page, limit } = data;
     const skip = (page - 1) * limit;
+
+    const wallets = await this.prisma.wallet.findMany({
+      select: { id: true },
+      where: { userId },
+    });
 
     const [items, total] = await Promise.all([
       this.prisma.transaction.findMany({
-        where: { walletId },
+        where: { walletId: { in: wallets.map((w) => w.id) } },
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
       }),
       this.prisma.transaction.count({
-        where: { walletId },
+        where: { walletId: { in: wallets.map((w) => w.id) } },
       }),
     ]);
 
     return {
-      items,
+      data: items,
       meta: {
         total,
         page,

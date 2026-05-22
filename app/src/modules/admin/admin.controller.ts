@@ -6,6 +6,7 @@ import {
   UseGuards,
   NotFoundException,
   Body,
+  Delete,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { UserRole } from '../users/enums/user-role.enum';
@@ -20,6 +21,7 @@ import {
   ApiBearerAuth,
   ApiParam,
 } from '@nestjs/swagger';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 
 @ApiTags('admin')
 @ApiBearerAuth()
@@ -32,8 +34,8 @@ export class AdminController {
   @Get('users')
   @ApiOperation({ summary: 'Get all users' })
   @ApiResponse({ status: 200, description: 'Returns all users' })
-  async findAll() {
-    return this.adminService.findAll();
+  async findAll(@Body() data: PaginationQueryDto) {
+    return this.adminService.getUsersList(data);
   }
 
   @Get('users/:id')
@@ -46,20 +48,19 @@ export class AdminController {
     return user;
   }
 
-  // TODO: move userId to body
-  @Patch('users/:id/ban')
+  @Patch('users/:id')
   @ApiOperation({ summary: 'Ban a user' })
   @ApiResponse({ status: 200, description: 'User banned' })
   @ApiParam({ name: 'id', description: 'User ID' })
   banUser(@Param('id') id: string, @Body() data: UpdateUserByAdminDto) {
-    return this.adminService.ban(id, data);
+    return this.adminService.update(id, data);
   }
 
-  @Patch('users/:id/unban')
-  @ApiOperation({ summary: 'Unban a user' })
-  @ApiResponse({ status: 200, description: 'User unbanned' })
+  @Delete('users/:id')
+  @ApiOperation({ summary: 'Delete a user' })
+  @ApiResponse({ status: 200, description: 'User deleted' })
   @ApiParam({ name: 'id', description: 'User ID' })
-  unbanUser(@Param('id') id: string) {
-    return this.adminService.unban(id);
+  deleteUser(@Param('id') id: string) {
+    return this.adminService.removeUser(id);
   }
 }

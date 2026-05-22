@@ -143,10 +143,6 @@ export class RouletteService {
     const payout = isWin ? dto.amount * multiplier : 0;
     const profit = payout - dto.amount;
 
-    // if (payout > 0) {
-    //   await this.walletService.credit(userId, payout);
-    // }
-
     await this.prisma.rouletteBet.create({
       data: {
         userId,

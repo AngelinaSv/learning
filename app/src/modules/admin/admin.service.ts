@@ -1,36 +1,30 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { UpdateUserByAdminDto } from './dto/update-user-by-admin.dto';
-import { UpdateUserDto } from '../users/dto/update-user.dto';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 
 @Injectable()
 export class AdminService {
   constructor(private readonly userService: UsersService) {}
 
-  async findAll() {
-    return this.userService.findAll();
+  async getUsersList(data: PaginationQueryDto) {
+    return this.userService.findAllByAdmin(data);
   }
 
   async findOne(id: string) {
-    const user = await this.userService.findOne(id);
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    return user;
+    return this.userService.findOneByAdmin(id);
   }
 
-  async update(id: string, data: UpdateUserDto) {
+  async update(id: string, data: UpdateUserByAdminDto) {
     const user = await this.findOne(id);
-    const updated = await this.userService.update(user.id, data);
+    const updated = await this.userService.updateByAdmin(user.id, data);
 
     // TODO: logs, history
 
     return updated;
   }
 
-  async remove(id: string) {
+  async removeUser(id: string) {
     await this.userService.remove(id);
     // TODO: logs, history, notification
   }

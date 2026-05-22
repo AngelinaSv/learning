@@ -11,6 +11,8 @@ import { SignInDto } from './dto/sign-in.dto';
 import { TokenService } from 'src/common/security/services/token.service';
 import { SignUpDto } from './dto/sign-up.dto';
 import { PasswordHashService } from 'src/common/security/services/password-hash.service';
+import { plainToInstance } from 'class-transformer';
+import { UserResponseDto } from '../users/dto/user-response.dto';
 
 @Injectable()
 export class AuthService {
@@ -56,7 +58,6 @@ export class AuthService {
     };
   }
 
-
   async login(data: SignInDto) {
     const { email, password } = data;
     // const session = this.sessionService.create(user.id, data);
@@ -78,14 +79,14 @@ export class AuthService {
     const accessToken = this.tokenService.generate(user.id, user.role);
 
     return {
-      user,
+      user: plainToInstance(UserResponseDto, user, {
+        excludeExtraneousValues: true,
+      }),
       accessToken,
-      // access_token: this.jwtService.sign({ email: user.email, sub: user.id }),
-      // sessionId,
     };
   }
 
-  async logout(userId: string) {
+  logout() {
     // await this.sessionService.remove(user.id, sessionId);
     return { message: 'Signout success' };
   }

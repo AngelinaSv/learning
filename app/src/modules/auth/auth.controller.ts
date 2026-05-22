@@ -46,11 +46,8 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Logout user' })
   @ApiResponse({ status: 200, description: 'User successfully logged out' })
-  async logout(
-    @CurrentUserId() userId: string,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    const logoutMessage = await this.authService.logout(userId);
+  logout(@Res({ passthrough: true }) res: Response) {
+    const logoutMessage = this.authService.logout();
     this.authCookieService.clearAuthCookie(res);
 
     return logoutMessage;

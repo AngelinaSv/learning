@@ -10,9 +10,9 @@ import { PrismaService } from '../prisma/prisma.service';
 export class WalletService {
   constructor(private prisma: PrismaService) {}
 
-  async getBalance(walletId: string) {
+  async getBalance(userId: string) {
     const wallet = await this.prisma.wallet.findUnique({
-      where: { id: walletId },
+      where: { userId },
       select: {
         balance: true,
         currency: true,

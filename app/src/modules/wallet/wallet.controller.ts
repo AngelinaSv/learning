@@ -18,7 +18,6 @@ import {
   ApiTags,
   ApiOperation,
   ApiResponse,
-  ApiParam,
   ApiQuery,
   ApiBearerAuth,
 } from '@nestjs/swagger';
@@ -38,32 +37,18 @@ export class WalletController {
   @Get('balance')
   @ApiOperation({ summary: 'Get wallet balance' })
   @ApiResponse({ status: 200, description: 'Returns the wallet balance' })
-  @ApiParam({ name: 'id', description: 'Wallet ID' })
-  async getBalance(@Param('id') id: string) {
-    return this.walletService.getBalance(id);
+  async getBalance(@CurrentUserId() userId: string) {
+    return this.walletService.getBalance(userId);
   }
 
   @Post('deposit')
   @ApiOperation({ summary: 'Deposit funds to wallet' })
   @ApiResponse({ status: 201, description: 'Deposit successful' })
-  async deposit(@Param('id') id: string, @Body() dto: DepositDto) {
+  async deposit(@CurrentUserId() userId: string, @Body() dto: DepositDto) {
     const amountDecimal = new Prisma.Decimal(dto.amount);
-    return this.transactionService.processDeposit(id, {
+    return this.transactionService.processDeposit(userId, {
       ...dto,
       amount: amountDecimal,
-    });
-  }
-
-  @Post('withdraw')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Withdraw funds from wallet' })
-  @ApiResponse({ status: 200, description: 'Withdrawal successful' })
-  async withdraw(@CurrentUserId() userId: string, @Body() dto: WithdrawDto) {
-    const amountDecimal = new Prisma.Decimal(dto.amount);
-
-    return this.transactionService.processWithdrawal(userId, {
-      amount: amountDecimal,
-      idempotencyKey: dto.idempotencyKey,
     });
   }
 
@@ -83,6 +68,21 @@ export class WalletController {
     });
   }
 
+  // TODO: Add withdrawal and dispute endpoints, implement idempotency and error handling in service methods
+
+  // @Post('withdraw')
+  // @HttpCode(HttpStatus.OK)
+  // @ApiOperation({ summary: 'Withdraw funds from wallet' })
+  // @ApiResponse({ status: 200, description: 'Withdrawal successful' })
+  // async withdraw(@CurrentUserId() userId: string, @Body() dto: WithdrawDto) {
+  //   const amountDecimal = new Prisma.Decimal(dto.amount);
+
+  //   return this.transactionService.processWithdrawal(userId, {
+  //     amount: amountDecimal,
+  //     idempotencyKey: dto.idempotencyKey,
+  //   });
+  // }
+
   // @Post('transactions/:id/refund')
   // @HttpCode(HttpStatus.OK)
   // @ApiOperation({ summary: 'Refund a transaction' })
@@ -100,8 +100,3 @@ export class WalletController {
   //   return this.transactionService.markAsDisputed(txId);
   // }
 }
-// function UseGuards(
-//   JwtAuthGuard: any,
-// ): (target: typeof WalletController) => void | typeof WalletController {
-//   throw new Error('Function not implemented.');
-// }

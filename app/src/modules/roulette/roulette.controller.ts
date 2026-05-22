@@ -18,6 +18,9 @@ import {
   ApiBearerAuth,
   ApiParam,
 } from '@nestjs/swagger';
+import { RolesGuard } from 'src/common/security/guards/roles.guard';
+import { UserRole } from '../users/enums/user-role.enum';
+import { Roles } from 'src/common/security/decorators/roles.decorator';
 
 @ApiTags('roulette')
 @ApiBearerAuth()
@@ -33,6 +36,8 @@ export class RouletteController {
     return this.rouletteService.createSession(userId);
   }
 
+  @Roles(UserRole.ADMIN)
+  @UseGuards(RolesGuard)
   @Get('sessions')
   @ApiOperation({ summary: 'Get all roulette sessions' })
   @ApiResponse({ status: 200, description: 'Returns all sessions' })

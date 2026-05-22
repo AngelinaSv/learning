@@ -1,6 +1,15 @@
-# InternShip App
+## Project Overview
 
-NestJS-based backend application with PostgreSQL and Prisma.
+A RESTful backend service built with NestJS, PostgreSQL, and Prisma ORM.
+
+The system includes:
+- Authentication with JWT (access/refresh tokens)
+- User and profile management
+- Wallet system with transactions
+- Roulette game logic
+- Swagger API documentation
+
+The project is containerized using Docker and supports migration-based database schema management.
 
 ## Project Structure
 
@@ -15,9 +24,9 @@ app/
 │   │   ├── auth/        # Authentication (sign-up, sign-in, sign-out)
 │   │   ├── profiles/    # User profiles
 │   │   ├── roulette/    # Roulette game logic
-│   │   ├── sessions/    # Session management
+│   │   ├── sessions/    # Game session management
 │   │   ├── users/       # User management
-│   │   ├── wallet/      # Wallet, deposits, withdrawals, transactions
+│   │   ├── wallet/      # Wallet, deposits, transactions
 │   │   └── prisma/      # Prisma service
 │   ├── app.module.ts
 │   └── main.ts
@@ -88,16 +97,11 @@ npm run start:prod
 ## TODOs
 
 ### High Priority
-- [ ] `auth.service.ts:23` - Implement validateUser properly
 - [ ] `users.service.ts:53` - Create separate service for admin operations and move findAll method
 
 ### Medium Priority
-- [ ] `users.service.ts:37` - Map to UserDto instead of returning raw object
-- [ ] `wallet.controller.ts:50` - Add walletId param to deposit endpoint
-- [ ] `admin.controller.ts:49` - Move userId to body in ban endpoint
 - [ ] `wallet` - Add GameFlowService
+- [ ] `prisma` - Move prisma service to common
 
 ### Low Priority
-- [ ] `auth.service.ts:88` - Remove unused logout userId parameter
-- [ ] `profiles.profile.service.ts:25` - Implement storage service wrapper
 - [ ] `admin.service.ts:28,35` - Add logs, history, notifications for admin operations

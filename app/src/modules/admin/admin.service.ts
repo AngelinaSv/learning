@@ -1,18 +1,55 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { UpdateUserByAdminDto } from './dto/update-user-by-admin.dto';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
+import { PrismaService } from '../prisma/prisma.service';
+import { plainToInstance } from 'class-transformer';
+import { AdminUserListResponseDto } from './dto/admin-user-list-response.dto';
 
 @Injectable()
 export class AdminService {
-  constructor(private readonly userService: UsersService) {}
+  constructor(
+    private readonly userService: UsersService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   async getUsersList(data: PaginationQueryDto) {
-    return this.userService.findAllByAdmin(data);
+    const { page, limit } = data;
+    const skip = (page - 1) * limit;
+
+    const [users, total] = await Promise.all([
+      this.prisma.user.findMany({
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+        include: {
+          profile: true,
+          wallet: true,
+        },
+      }),
+      this.prisma.user.count(),
+    ]);
+
+    return {
+      data: plainToInstance(AdminUserListResponseDto, users, {
+        excludeExtraneousValues: true,
+      }),
+      meta: {
+        total,
+        page,
+        lastPage: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOne(id: string) {
-    return this.userService.findOneByAdmin(id);
+    const user = await this.userService.findOneByAdmin(id);
+
+    if (!user) {
+      throw new NotFoundException();
+    }
+
+    return user;
   }
 
   async update(id: string, data: UpdateUserByAdminDto) {

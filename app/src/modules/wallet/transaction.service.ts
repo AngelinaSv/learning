@@ -1,129 +1,134 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   Prisma,
-  TransactionType,
   TransactionStatus,
+  TransactionType,
 } from '@generated/prisma/client';
-import { DepositDto } from './dto/deposit.dto';
-import { WithdrawDto } from './dto/withdraw.dto';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
+
+type PrismaTx = Prisma.TransactionClient;
+
+type TransactionRecordData = {
+  userId: string | null;
+  walletId: string;
+  amount: Prisma.Decimal | number | string;
+  idempotencyKey?: string;
+  referenceId?: string;
+};
 
 @Injectable()
 export class TransactionService {
   constructor(private prisma: PrismaService) {}
 
-  async processWithdrawal(userId: string, dto: WithdrawDto) {
-    const { amount, idempotencyKey } = dto;
-
-    const existing = await this.prisma.transaction.findUnique({
+  async findByIdempotencyKey(idempotencyKey: string) {
+    return this.prisma.transaction.findUnique({
       where: { idempotencyKey },
     });
+  }
 
-    if (existing) {
-      return existing;
-    }
-
-    return this.prisma.$transaction(async (tx) => {
-      const wallet = await tx.wallet.findUnique({
-        where: { userId },
-      });
-
-      if (!wallet || !wallet.isActive) {
-        throw new BadRequestException('Wallet unavailable');
-      }
-
-      if (wallet.balance.lt(amount)) {
-        throw new BadRequestException('Insufficient funds');
-      }
-
-      const transaction = await tx.transaction.create({
-        data: {
-          walletId: wallet.id,
-          type: TransactionType.WITHDRAWAL,
-          status: TransactionStatus.COMPLETED,
-          amount,
-          idempotencyKey,
-          description: 'Withdrawal',
-        },
-      });
-
-      await tx.wallet.update({
-        where: { id: wallet.id },
-        data: {
-          balance: {
-            decrement: amount,
-          },
-        },
-      });
-
-      return transaction;
+  async findById(tx: PrismaTx, transactionId: string) {
+    return tx.transaction.findUnique({
+      where: { id: transactionId },
     });
   }
 
-  async processDeposit(userId: string, dto: DepositDto) {
-    const amount = new Prisma.Decimal(dto.amount);
-
-    if (amount.lte(0)) {
-      throw new BadRequestException('Amount must be > 0');
-    }
-
-    return this.prisma.$transaction(async (tx) => {
-      const wallet = await tx.wallet.findUnique({
-        where: { userId },
-      });
-
-      if (!wallet || !wallet.isActive) {
-        throw new BadRequestException('Wallet not available');
-      }
-
-      const depositTx = await tx.transaction.create({
-        data: {
-          walletId: wallet.id,
-          type: 'DEPOSIT',
-          status: 'COMPLETED',
-          amount,
-          description: 'Deposit funds',
-          idempotencyKey: dto.idempotencyKey, // если добавишь (очень желательно)
-        },
-      });
-
-      await tx.wallet.update({
-        where: { id: wallet.id },
-        data: {
-          balance: {
-            increment: amount,
-          },
-        },
-      });
-
-      return depositTx;
+  async findRefundByReference(tx: PrismaTx, referenceId: string) {
+    return tx.transaction.findFirst({
+      where: {
+        referenceId,
+        type: TransactionType.REFUND,
+      },
     });
   }
 
-  async getHistory(userId: string, data: PaginationQueryDto) {
+  async createDepositTransaction(tx: PrismaTx, data: TransactionRecordData) {
+    return tx.transaction.create({
+      data: {
+        userId: data.userId,
+        walletId: data.walletId,
+        type: TransactionType.DEPOSIT,
+        status: TransactionStatus.COMPLETED,
+        amount: data.amount,
+        idempotencyKey: data.idempotencyKey,
+        description: 'Deposit funds',
+      },
+    });
+  }
+
+  async createWithdrawalTransaction(tx: PrismaTx, data: TransactionRecordData) {
+    return tx.transaction.create({
+      data: {
+        userId: data.userId,
+        walletId: data.walletId,
+        type: TransactionType.WITHDRAWAL,
+        status: TransactionStatus.COMPLETED,
+        amount: data.amount,
+        idempotencyKey: data.idempotencyKey,
+        description: 'Withdrawal',
+      },
+    });
+  }
+
+  async createBetTransaction(tx: PrismaTx, data: TransactionRecordData) {
+    return tx.transaction.create({
+      data: {
+        userId: data.userId,
+        walletId: data.walletId,
+        type: TransactionType.BET,
+        status: TransactionStatus.COMPLETED,
+        amount: data.amount,
+        referenceId: data.referenceId,
+        description: 'Roulette bet',
+      },
+    });
+  }
+
+  async createWinTransaction(tx: PrismaTx, data: TransactionRecordData) {
+    return tx.transaction.create({
+      data: {
+        userId: data.userId,
+        walletId: data.walletId,
+        type: TransactionType.WIN,
+        status: TransactionStatus.COMPLETED,
+        amount: data.amount,
+        referenceId: data.referenceId,
+        description: 'Roulette win',
+      },
+    });
+  }
+
+  async createRefundTransaction(tx: PrismaTx, data: TransactionRecordData) {
+    return tx.transaction.create({
+      data: {
+        userId: data.userId,
+        walletId: data.walletId,
+        type: TransactionType.REFUND,
+        status: TransactionStatus.COMPLETED,
+        amount: data.amount,
+        referenceId: data.referenceId,
+        description: 'Refund',
+      },
+    });
+  }
+
+  async getTransactionHistory(userId: string, data: PaginationQueryDto) {
     const { page, limit } = data;
     const skip = (page - 1) * limit;
 
-    const wallets = await this.prisma.wallet.findMany({
-      select: { id: true },
-      where: { userId },
-    });
-
     const [items, total] = await Promise.all([
       this.prisma.transaction.findMany({
-        where: { walletId: { in: wallets.map((w) => w.id) } },
+        where: {
+          OR: [{ userId }, { wallet: { userId } }],
+        },
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
       }),
       this.prisma.transaction.count({
-        where: { walletId: { in: wallets.map((w) => w.id) } },
+        where: {
+          OR: [{ userId }, { wallet: { userId } }],
+        },
       }),
     ]);
 
@@ -135,55 +140,6 @@ export class TransactionService {
         lastPage: Math.ceil(total / limit),
       },
     };
-  }
-
-  async processRefund(originalTransactionId: string) {
-    return this.prisma.$transaction(async (tx) => {
-      const originalTx = await tx.transaction.findUnique({
-        where: { id: originalTransactionId },
-      });
-
-      if (!originalTx) {
-        throw new NotFoundException('Transaction not found');
-      }
-
-      if (originalTx.type !== TransactionType.WITHDRAWAL) {
-        throw new BadRequestException('Only withdrawals can be refunded');
-      }
-
-      const existingRefund = await tx.transaction.findFirst({
-        where: {
-          referenceId: originalTransactionId,
-          type: TransactionType.REFUND,
-        },
-      });
-
-      if (existingRefund) {
-        throw new ConflictException('Already refunded');
-      }
-
-      const refund = await tx.transaction.create({
-        data: {
-          walletId: originalTx.walletId,
-          type: TransactionType.REFUND,
-          status: TransactionStatus.COMPLETED,
-          amount: originalTx.amount,
-          referenceId: originalTx.id,
-          description: 'Refund',
-        },
-      });
-
-      await tx.wallet.update({
-        where: { id: originalTx.walletId },
-        data: {
-          balance: {
-            increment: originalTx.amount,
-          },
-        },
-      });
-
-      return refund;
-    });
   }
 
   async markAsDisputed(transactionId: string) {

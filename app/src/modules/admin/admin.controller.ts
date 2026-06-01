@@ -4,9 +4,9 @@ import {
   Patch,
   Param,
   UseGuards,
-  NotFoundException,
   Body,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { UserRole } from '../users/enums/user-role.enum';
@@ -20,6 +20,7 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiParam,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 
@@ -34,7 +35,9 @@ export class AdminController {
   @Get('users')
   @ApiOperation({ summary: 'Get all users' })
   @ApiResponse({ status: 200, description: 'Returns all users' })
-  async findAll(@Body() data: PaginationQueryDto) {
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  async findAll(@Query() data: PaginationQueryDto) {
     return this.adminService.getUsersList(data);
   }
 
@@ -43,9 +46,7 @@ export class AdminController {
   @ApiResponse({ status: 200, description: 'Returns the user' })
   @ApiParam({ name: 'id', description: 'User ID' })
   async findOne(@Param('id') id: string) {
-    const user = await this.adminService.findOne(id);
-    if (!user) throw new NotFoundException();
-    return user;
+    return this.adminService.findOne(id);
   }
 
   @Patch('users/:id')

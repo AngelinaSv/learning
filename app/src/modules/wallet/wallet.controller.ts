@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Query, UseGuards } from '@nestjs/common';
 import { WalletService } from './wallet.service';
 import { DepositDto } from './dto/deposit.dto';
-import { Prisma } from '@generated/prisma/client';
+import { WithdrawDto } from './dto/withdraw.dto';
 import { TransactionService } from './transaction.service';
 import {
   ApiTags,
@@ -12,6 +12,7 @@ import {
 } from '@nestjs/swagger';
 import { CurrentUserId } from 'src/common/security/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 
 @ApiTags('wallet')
 @ApiBearerAuth()
@@ -34,11 +35,14 @@ export class WalletController {
   @ApiOperation({ summary: 'Deposit funds to wallet' })
   @ApiResponse({ status: 201, description: 'Deposit successful' })
   async deposit(@CurrentUserId() userId: string, @Body() dto: DepositDto) {
-    const amountDecimal = new Prisma.Decimal(dto.amount);
-    return this.transactionService.processDeposit(userId, {
-      ...dto,
-      amount: amountDecimal,
-    });
+    return this.walletService.processDeposit(userId, dto);
+  }
+
+  @Post('withdraw')
+  @ApiOperation({ summary: 'Withdraw funds from wallet' })
+  @ApiResponse({ status: 201, description: 'Withdrawal successful' })
+  async withdraw(@CurrentUserId() userId: string, @Body() dto: WithdrawDto) {
+    return this.walletService.processWithdrawal(userId, dto);
   }
 
   @Get('transactions/history')
@@ -48,14 +52,10 @@ export class WalletController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   async getHistory(
     @CurrentUserId() userId: string,
-    @Query('page') page = '1',
-    @Query('limit') limit = '20',
+    @Query() query: PaginationQueryDto,
   ) {
-    return this.transactionService.getHistory(userId, {
-      page: Number(page),
-      limit: Number(limit),
-    });
+    return this.transactionService.getTransactionHistory(userId, query);
   }
 
-  // TODO: Add withdrawal and dispute endpoints, implement idempotency and error handling in service methods
+  // TODO: Add dispute endpoints, implement idempotency and error handling in service methods
 }

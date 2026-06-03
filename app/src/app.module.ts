@@ -11,6 +11,7 @@ import { RouletteModule } from './modules/roulette/roulette.module';
 import { SessionsModule } from './modules/sessions/sessions.module';
 import { ProfilesModule } from './modules/profiles/profiles.module';
 import { WalletModule } from './modules/wallet/wallet.module';
+import { RedisModule } from './modules/redis/redis.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { WalletModule } from './modules/wallet/wallet.module';
     AddressesModule,
     ProfilesModule,
     WalletModule,
+    RedisModule.forRootAsync(),
   ],
   controllers: [AppController],
   providers: [AppService],

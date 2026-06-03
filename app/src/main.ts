@@ -6,6 +6,8 @@ import { ValidationPipe } from '@nestjs/common/pipes/validation.pipe';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.enableShutdownHooks();
+
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,

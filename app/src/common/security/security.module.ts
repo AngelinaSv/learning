@@ -7,6 +7,6 @@ import { TokenService } from './services/token.service';
 @Module({
   imports: [JwtModule.register({})],
   providers: [PasswordHashService, TokenService],
-  exports: [PasswordHashService, TokenService],
+  exports: [JwtModule, PasswordHashService, TokenService],
 })
 export class SecurityModule {}

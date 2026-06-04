@@ -6,14 +6,13 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Role } from '@generated/prisma/client';
 // import { SessionsService } from 'src/modules/sessions/sessions.service';
 import { UsersService } from 'src/modules/users/users.service';
 
 export type JwtPayload = {
   sub: string;
-  email: string;
-  username: string;
-  sessionId: string;
+  role: Role;
 };
 
 export type DecodedJwtPayload = JwtPayload & {

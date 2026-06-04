@@ -77,6 +77,7 @@ export class UsersService {
     const user = await this.prisma.user.findUnique({
       select: {
         id: true,
+        username: true,
         isBanned: true,
         isDeleted: true,
         role: true,

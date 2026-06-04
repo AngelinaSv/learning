@@ -13,6 +13,7 @@ import { ProfilesModule } from './modules/profiles/profiles.module';
 import { WalletModule } from './modules/wallet/wallet.module';
 import { RedisModule } from './core/redis/redis.module';
 import { ChatModule } from './modules/chat/chat.module';
+import { VideoSlotModule } from './modules/video-slot/video-slot.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { ChatModule } from './modules/chat/chat.module';
     WalletModule,
     RedisModule.forRootAsync(),
     ChatModule,
+    VideoSlotModule,
   ],
   controllers: [AppController],
   providers: [AppService],

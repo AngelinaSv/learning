@@ -38,6 +38,7 @@ model User {
   gameSessions GameSession[]
   wallet       Wallet?
   rouletteBets RouletteBet[]
+  videoSlotHistories VideoSlotHistory[]
 
   @@index([username])
   @@index([email])
@@ -190,4 +191,23 @@ model Transaction {
   @@index([createdAt])
   @@index([status])
   @@map("transactions")
+}
+
+model VideoSlotHistory {
+  id         String   @id @default(uuid())
+  gameId     String   @unique @map("game_id")
+  userId     String   @map("user_id")
+  mode       Int
+  totalSpins Int      @map("total_spins")
+  totalBets  Decimal  @db.Decimal(18, 6) @map("total_bets")
+  totalWins  Decimal  @db.Decimal(18, 6) @map("total_wins")
+  netResult  Decimal  @db.Decimal(18, 6) @map("net_result")
+  rtp        Float
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("video_slot_history")
 }

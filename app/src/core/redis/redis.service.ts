@@ -23,6 +23,10 @@ export class RedisService implements OnModuleDestroy {
     return this.redisClient.get(key);
   }
 
+  async del(key: string): Promise<number> {
+    return this.redisClient.del(key);
+  }
+
   async healthCheck() {
     const key = 'redis:health';
     const value = new Date().toISOString();

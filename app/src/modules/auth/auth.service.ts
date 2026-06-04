@@ -5,8 +5,6 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
-// import { JwtService } from '@nestjs/jwt';
-import bcrypt from 'bcrypt';
 import { SignInDto } from './dto/sign-in.dto';
 import { TokenService } from 'src/common/security/services/token.service';
 import { SignUpDto } from './dto/sign-up.dto';
@@ -18,17 +16,22 @@ import { UserResponseDto } from '../users/dto/user-response.dto';
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
-    // private readonly jwtService: JwtService,
     private readonly tokenService: TokenService,
     private readonly passwordHashService: PasswordHashService,
   ) {}
-  // TODO:
   async validateUser(email: string, pass: string): Promise<any> {
     const user = await this.usersService.findOneByEmail(email);
 
-    const passwordIsMathc = await bcrypt.compare(pass, user!.password);
+    if (!user) {
+      throw new UnauthorizedException();
+    }
 
-    if (!user || !passwordIsMathc) {
+    const passwordIsMathc = await this.passwordHashService.compare(
+      pass,
+      user.password,
+    );
+
+    if (!passwordIsMathc) {
       throw new UnauthorizedException();
     }
 
@@ -60,15 +63,18 @@ export class AuthService {
 
   async login(data: SignInDto) {
     const { email, password } = data;
-    // const session = this.sessionService.create(user.id, data);
     const user = await this.usersService.findOneByEmail(email);
+
+    if (!user) {
+      throw new UnauthorizedException();
+    }
 
     const passwordIsMathc = await this.passwordHashService.compare(
       password,
-      user!.password,
+      user.password,
     );
 
-    if (!user || !passwordIsMathc) {
+    if (!passwordIsMathc) {
       throw new UnauthorizedException();
     }
 
@@ -87,7 +93,6 @@ export class AuthService {
   }
 
   logout() {
-    // await this.sessionService.remove(user.id, sessionId);
     return { message: 'Signout success' };
   }
 }

@@ -15,8 +15,10 @@ import {
   WsJwtGuard,
 } from 'src/common/websocket';
 import { GLOBAL_CHAT_ROOM } from './chat.constants';
+import { ChatModerationService } from './chat-moderation.service';
 import { ChatService } from './chat.service';
 import {
+  ChatMessageBlockedEvent,
   ChatErrorEvent,
   JoinRoomPayload,
   SendMessagePayload,
@@ -36,6 +38,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   constructor(
     private readonly chatService: ChatService,
+    private readonly chatModerationService: ChatModerationService,
     private readonly wsJwtGuard: WsJwtGuard,
   ) {}
 
@@ -111,6 +114,24 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       await this.wsJwtGuard.authenticate(client);
 
       const message = this.chatService.createRoomMessage(client, payload);
+
+      // Lightweight anti-spam layer for global chat advertising/referral links.
+      // A production system would likely delegate this to a richer moderation service.
+      if (this.chatModerationService.containsForbiddenContent(message.message)) {
+        const blockedPayload: ChatMessageBlockedEvent = {
+          reason: 'Message contains advertising or forbidden content',
+          sanitizedMessage: this.chatModerationService.sanitizeMessage(
+            message.message,
+          ),
+        };
+
+        client.emit('chat:message:blocked', blockedPayload);
+
+        return {
+          status: 'blocked',
+          ...blockedPayload,
+        };
+      }
 
       // TODO: enforce room membership before sending when private/game rooms matter.
       this.server.to(message.room).emit('roomMessage', message);

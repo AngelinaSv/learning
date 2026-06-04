@@ -21,3 +21,8 @@ export interface ChatErrorEvent {
   message: string;
   timestamp: string;
 }
+
+export interface ChatMessageBlockedEvent {
+  reason: string;
+  sanitizedMessage: string;
+}

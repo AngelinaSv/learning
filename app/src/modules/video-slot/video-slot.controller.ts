@@ -20,10 +20,10 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PlayVideoSlotDto } from './dto/play-video-slot.dto';
 import { VideoSlotService } from './video-slot.service';
 
-@ApiTags('videoslot')
+@ApiTags('video-slots')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@Controller('videoslot')
+@Controller('video-slots')
 export class VideoSlotController {
   constructor(private readonly videoSlotService: VideoSlotService) {}
 

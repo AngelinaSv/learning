@@ -29,6 +29,8 @@ app/
 │   │   ├── sessions/    # Game session management
 │   │   ├── users/       # User management
 │   │   ├── wallet/      # Wallet, deposits, transactions
+│   │   ├── chat/        # Real-time chat
+│   │   ├── video-slot/  # Video slots game logic
 │   │   └── prisma/      # Prisma service
 │   ├── app.module.ts
 │   └── main.ts
@@ -41,21 +43,11 @@ app/
 - Node.js 22+
 - Docker & Docker Compose
 
-### Installation
-
-```bash
-# Install dependencies
-npm install
-
-# Generate Prisma client
-npx prisma generate
-```
-
 ### Running with Docker
 
 ```bash
 # Start all services (app + database)
-docker compose up -d
+docker compose up -d --build
 
 # View logs
 docker compose logs -f

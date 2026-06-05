@@ -28,7 +28,7 @@
     <div class="panel">
         <h3>1. Підключення</h3>
         <p>Статус: <span id="status" class="status-offline">Відключено</span></p>
-        <input type="text" id="serverUrl" value="http://localhost:3500/chat" placeholder="URL сервера (з namespace)">
+        <input type="text" id="serverUrl" value="http://localhost:3009/chat" placeholder="URL сервера (з namespace)">
         <button id="btnConnect">Підключитись</button>
         <button id="btnDisconnect" disabled>Відключитись</button>
     </div>
@@ -95,18 +95,36 @@
             btnSend.disabled = !isConnected;
         }
 
+        function disconnectChat() {
+            if (socket) {
+                socket.disconnect();
+                socket = undefined;
+            }
+
+            currentRoom = 'global';
+            updateUI(false);
+        }
+
         // --- ЛОГІКА SOCKET.IO ---
 
         // 1. Підключення
         btnConnect.addEventListener('click', () => {
             const url = serverUrlInput.value;
+            const token = jwtTokenInput.value.trim();
+
+            if (!token) {
+                logMessage('JWT access token is required. Chat disconnected.', true);
+                disconnectChat();
+                return;
+            }
+
             logMessage(`Спроба підключення до ${url}...`, true);
             
             // Ініціалізація підключення
             socket = io(url, {
                 transports: ['websocket'], // пріоритет на websocket
                 auth: {
-                    token: jwtTokenInput.value.trim(),
+                    token,
                 }
             });
 
@@ -127,6 +145,17 @@
             // Обробка помилок
             socket.on('connect_error', (err) => {
                 logMessage(`⚠️ Помилка з'єднання: ${err.message}`, true);
+                if (!jwtTokenInput.value.trim()) {
+                    disconnectChat();
+                }
+            });
+
+            socket.on('exception', (data) => {
+                const message = data?.message || 'Unauthorized';
+                logMessage(`⚠️ ${message}`, true);
+                if (message === 'Unauthorized') {
+                    disconnectChat();
+                }
             });
 
             // --- СЛУХАЧІ ПОДІЙ ВІД СЕРВЕРА ---
@@ -145,9 +174,7 @@
 
         // 2. Відключення
         btnDisconnect.addEventListener('click', () => {
-            if (socket) {
-                socket.disconnect();
-            }
+            disconnectChat();
         });
 
         // 3. Приєднання до кімнати

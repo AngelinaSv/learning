@@ -56,8 +56,6 @@ export class AdminService {
     const user = await this.findOne(id);
     const updated = await this.userService.updateByAdmin(user.id, data);
 
-    // TODO: logs, history
-
     return updated;
   }
 

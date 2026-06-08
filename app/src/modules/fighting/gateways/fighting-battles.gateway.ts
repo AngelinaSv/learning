@@ -17,6 +17,7 @@ import {
 } from 'src/common/websocket';
 import { MakeFightingMoveDto } from '../dto/make-fighting-move.dto';
 import { FightingBattlesService } from '../services/fighting-battles.service';
+import { FightingMatchmakingService } from '../services/fighting-matchmaking.service';
 import { FightingBattleRealtimeEvent } from '../types/fighting-battle.types';
 
 interface FightingBattlePayload {
@@ -25,7 +26,7 @@ interface FightingBattlePayload {
 
 @UseFilters(WsExceptionFilter)
 @WebSocketGateway({
-  namespace: 'fighting',
+  namespace: '/fighting',
   cors: { origin: '*' },
 })
 export class FightingBattlesGateway
@@ -44,6 +45,7 @@ export class FightingBattlesGateway
 
   constructor(
     private readonly fightingBattlesService: FightingBattlesService,
+    private readonly fightingMatchmakingService: FightingMatchmakingService,
     private readonly wsJwtGuard: WsJwtGuard,
   ) {}
 
@@ -59,6 +61,7 @@ export class FightingBattlesGateway
   async handleConnection(client: Socket) {
     try {
       const user = await this.wsJwtGuard.authenticate(client);
+      await client.join(this.getUserRoomName(user.id));
       this.logger.log(
         `Client ${client.id} connected to fighting as ${user.username}`,
       );
@@ -81,6 +84,59 @@ export class FightingBattlesGateway
   onModuleDestroy() {
     if (this.battleEventListener) {
       this.fightingBattlesService.offBattleEvent(this.battleEventListener);
+    }
+  }
+
+  @SubscribeMessage('findFightingOpponent')
+  async handleFindFightingOpponent(
+    @ConnectedSocket() client: AuthenticatedSocket,
+  ) {
+    try {
+      const user = await this.wsJwtGuard.authenticate(client);
+      const userRoomName = this.getUserRoomName(user.id);
+
+      await client.join(userRoomName);
+
+      const result = await this.fightingMatchmakingService.findOpponent(
+        user.id,
+        client.id,
+      );
+
+      if (result.status === 'waiting') {
+        client.emit('fightingMatchmakingWaiting', result.payload);
+        return result.payload;
+      }
+
+      this.server
+        .to(this.getUserRoomName(result.opponent.userId))
+        .emit('fightingMatchFound', result.payload);
+      this.server.to(userRoomName).emit('fightingMatchFound', result.payload);
+
+      return result.payload;
+    } catch (error) {
+      return this.emitBattleError(client, 'findFightingOpponent', error);
+    }
+  }
+
+  @SubscribeMessage('cancelFightingMatchmaking')
+  async handleCancelFightingMatchmaking(
+    @ConnectedSocket() client: AuthenticatedSocket,
+  ) {
+    try {
+      const user = await this.wsJwtGuard.authenticate(client);
+      const userRoomName = this.getUserRoomName(user.id);
+
+      await client.join(userRoomName);
+
+      const payload = await this.fightingMatchmakingService.cancel(user.id);
+
+      this.server
+        .to(userRoomName)
+        .emit('fightingMatchmakingCancelled', payload);
+
+      return payload;
+    } catch (error) {
+      return this.emitBattleError(client, 'cancelFightingMatchmaking', error);
     }
   }
 
@@ -219,5 +275,9 @@ export class FightingBattlesGateway
 
   private getBattleRoomName(battleId: string) {
     return `fighting:battle:${battleId}`;
+  }
+
+  private getUserRoomName(userId: string) {
+    return `fighting:user:${userId}`;
   }
 }

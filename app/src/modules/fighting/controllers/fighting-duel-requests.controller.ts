@@ -12,7 +12,7 @@ import { JwtAuthGuard } from 'src/modules/auth/guards/jwt-auth.guard';
 import { CreateFightingDuelRequestDto } from '../dto/create-fighting-duel-request.dto';
 import { FightingDuelRequestsService } from '../services/fighting-duel-requests.service';
 
-@ApiTags('fighting-duel-requests')
+@ApiTags('fighting')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('fighting/duel-requests')

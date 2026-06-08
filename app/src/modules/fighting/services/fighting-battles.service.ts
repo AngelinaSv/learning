@@ -12,9 +12,6 @@ import { randomUUID } from 'node:crypto';
 import { RedisService } from 'src/core/redis/redis.service';
 import {
   FIGHTING_ACTIVE_BATTLE_TTL_SECONDS,
-  FIGHTING_DEFAULT_BLOCK_POWER,
-  FIGHTING_DEFAULT_HEALTH,
-  FIGHTING_DEFAULT_STRIKE,
   FIGHTING_FINISHED_BATTLE_TTL_SECONDS,
   FIGHTING_HIT_ZONES,
   FIGHTING_MOVE_TIMEOUT_MS,
@@ -32,6 +29,7 @@ import {
   FightingRoundResult,
   FightingRoundResultEvent,
 } from '../types/fighting-battle.types';
+import { FightingProfilesService } from './fighting-profiles.service';
 
 type FightingBattleEventListener = (event: FightingBattleRealtimeEvent) => void;
 
@@ -42,7 +40,10 @@ export class FightingBattlesService implements OnModuleDestroy {
   private readonly battleLocks = new Map<string, Promise<unknown>>();
   private readonly events = new EventEmitter();
 
-  constructor(private readonly redisService: RedisService) {}
+  constructor(
+    private readonly redisService: RedisService,
+    private readonly fightingProfilesService: FightingProfilesService,
+  ) {}
 
   onBattleEvent(listener: FightingBattleEventListener) {
     this.events.on('battleEvent', listener);
@@ -77,6 +78,7 @@ export class FightingBattlesService implements OnModuleDestroy {
       player2Moves: [],
       pendingMoves: {},
       roundResults: [],
+      result: null,
     };
 
     await this.saveBattleRoom(battleRoom);
@@ -173,8 +175,17 @@ export class FightingBattlesService implements OnModuleDestroy {
 
     this.clearMoveTimeout(battle.id);
 
+    const statusBeforeRound = battle.status;
     const roundResult = this.processRound(battle, player1Move, player2Move);
     const isFinished = battle.status === 'finished';
+
+    if (statusBeforeRound === 'active' && isFinished) {
+      await this.fightingProfilesService.applyBattleResult(
+        battle.winnerId,
+        battle.player1Id,
+        battle.player2Id,
+      );
+    }
 
     await this.saveBattleRoom(battle);
 
@@ -228,7 +239,11 @@ export class FightingBattlesService implements OnModuleDestroy {
 
     if (player1HealthAfter <= 0 || player2HealthAfter <= 0) {
       battle.status = 'finished';
-      battle.winnerId = this.getWinnerId(battle);
+      battle.result = this.getBattleResult(
+        player1HealthAfter,
+        player2HealthAfter,
+      );
+      battle.winnerId = this.getWinnerId(battle.result, battle);
     }
 
     return roundResult;
@@ -321,13 +336,23 @@ export class FightingBattlesService implements OnModuleDestroy {
     return attacker.strike;
   }
 
-  private getWinnerId(battle: FightingBattleRoom): string | undefined {
-    if (battle.player1Health <= 0 && battle.player2Health <= 0) {
-      return undefined;
-    }
+  private getBattleResult(
+    player1HealthAfter: number,
+    player2HealthAfter: number,
+  ) {
+    if (player1HealthAfter <= 0 && player2HealthAfter <= 0) return 'DRAW';
+    if (player1HealthAfter <= 0) return 'PLAYER2_WIN';
+    if (player2HealthAfter <= 0) return 'PLAYER1_WIN';
 
-    if (battle.player1Health <= 0) return battle.player2Id;
-    if (battle.player2Health <= 0) return battle.player1Id;
+    return null;
+  }
+
+  private getWinnerId(
+    result: FightingBattleRoom['result'],
+    battle: FightingBattleRoom,
+  ): string | undefined {
+    if (result === 'PLAYER1_WIN') return battle.player1Id;
+    if (result === 'PLAYER2_WIN') return battle.player2Id;
 
     return undefined;
   }
@@ -362,6 +387,7 @@ export class FightingBattlesService implements OnModuleDestroy {
       battleId: battle.id,
       winnerId: battle.winnerId,
       loserId,
+      result: battle.result,
       finalHealth: {
         player1: battle.player1Health,
         player2: battle.player2Health,
@@ -469,6 +495,7 @@ export class FightingBattlesService implements OnModuleDestroy {
       player1Health: battle.player1Health,
       player2Health: battle.player2Health,
       winnerId: battle.winnerId,
+      result: battle.result,
       lastRoundResult: battle.roundResults.at(-1),
       createdAt: battle.createdAt,
       updatedAt: battle.updatedAt,
@@ -515,12 +542,8 @@ export class FightingBattlesService implements OnModuleDestroy {
   }
 
   private async getPlayerBattleStats(
-    _userId: string,
+    userId: string,
   ): Promise<FightingPlayerBattleStats> {
-    return {
-      maxHealth: FIGHTING_DEFAULT_HEALTH,
-      strike: FIGHTING_DEFAULT_STRIKE,
-      blockPower: FIGHTING_DEFAULT_BLOCK_POWER,
-    };
+    return this.fightingProfilesService.getPlayerBattleStats(userId);
   }
 }

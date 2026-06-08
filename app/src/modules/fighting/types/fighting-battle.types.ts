@@ -26,7 +26,11 @@ export interface FightingPlayerBattleStats {
   maxHealth: number;
   strike: number;
   blockPower: number;
+  heroId?: string;
+  heroName?: string;
 }
+
+export type FightingBattleResult = 'PLAYER1_WIN' | 'PLAYER2_WIN' | 'DRAW';
 
 export interface FightingBattleRoom {
   id: string;
@@ -45,6 +49,7 @@ export interface FightingBattleRoom {
   pendingMoves: Record<string, FightingBattleMove>;
   roundResults: FightingRoundResult[];
   winnerId?: string;
+  result: FightingBattleResult | null;
 }
 
 export interface FightingBattleStatusResponse {
@@ -56,6 +61,7 @@ export interface FightingBattleStatusResponse {
   player1Health: number;
   player2Health: number;
   winnerId?: string;
+  result: FightingBattleResult | null;
   lastRoundResult?: FightingRoundResult;
   createdAt: string;
   updatedAt: string;
@@ -77,6 +83,7 @@ export interface FightingBattleFinishedEvent {
   battleId: string;
   winnerId?: string;
   loserId?: string;
+  result: FightingBattleResult | null;
   finalHealth: {
     player1: number;
     player2: number;

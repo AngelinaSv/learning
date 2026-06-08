@@ -10,12 +10,14 @@ import { JwtAuthGuard } from 'src/modules/auth/guards/jwt-auth.guard';
 import { FightingBattleStatusDto } from '../dto/fighting-battle-room.dto';
 import { FightingBattlesService } from '../services/fighting-battles.service';
 
-@ApiTags('fighting-battles')
+@ApiTags('fighting')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('fighting/battles')
 export class FightingBattlesController {
-  constructor(private readonly fightingBattlesService: FightingBattlesService) {}
+  constructor(
+    private readonly fightingBattlesService: FightingBattlesService,
+  ) {}
 
   @Get(':id/status')
   @ApiOperation({ summary: 'Get fighting battle status' })

@@ -22,7 +22,6 @@ export class ProfileService {
     return profile;
   }
 
-  // TODO: storage service wrapper
   async updateAvatar(userId: string, avatar: string | null) {
     const profile = await this.prisma.profile.findUnique({ where: { userId } });
 
@@ -36,28 +35,7 @@ export class ProfileService {
     });
   }
 
-  // async changeBalance(userId: string, delta: number | string | Prisma.Decimal) {
-  //   const profile = await this.requireProfile(userId);
-  //   const amount =
-  //     delta instanceof Prisma.Decimal ? delta : new Prisma.Decimal(delta);
-
-  //   const updated = await this.prisma.profile.update({
-  //     where: { userId: profile.userId },
-  //     data: {
-  //       balance: { increment: amount },
-  //     },
-  //   });
-
-  //   return updated.balance;
-  // }
-
-  // async getBalance(userId: string) {
-  //   const profile = await this.requireProfile(userId);
-  //   return profile.balance;
-  // }
-
   async addExperience(userId: string, amount: number) {
-    // assertFiniteNumber(amount, 'Experience amount must be a finite number');
     if (!isFiniteNumber(amount)) {
       throw new BadRequestException(
         'Experience amount must be a finite number',

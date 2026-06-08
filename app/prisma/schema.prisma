@@ -18,6 +18,11 @@ enum Role {
   ADMIN
 }
 
+enum FightingItemType {
+  WEAPON
+  ARMOR
+}
+
 model User {
   id          String    @id @default(uuid())
   username    String    @unique @map("username")
@@ -39,12 +44,43 @@ model User {
   wallet       Wallet?
   rouletteBets RouletteBet[]
   videoSlotHistories VideoSlotHistory[]
+  fightingCharacter FightingCharacter?
 
   @@index([username])
   @@index([email])
   @@index([createdAt])
   @@index([lastLoginIP])
   @@map("users")
+}
+
+model FightingCharacter {
+  id         String   @id @default(uuid())
+  userId     String   @unique @map("user_id")
+  name       String
+  level      Int      @default(1)
+  exp        Int      @default(0)
+  baseHealth Int      @default(10) @map("base_health")
+  baseStrike Int      @default(3) @map("base_strike")
+  baseBlock  Int      @default(2) @map("base_block")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("fighting_characters")
+}
+
+model FightingItem {
+  id          String           @id @default(uuid())
+  name        String
+  type        FightingItemType
+  bonusHealth Int              @default(0) @map("bonus_health")
+  bonusStrike Int              @default(0) @map("bonus_strike")
+  bonusBlock  Int              @default(0) @map("bonus_block")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  @@map("fighting_items")
 }
 
 model Profile {

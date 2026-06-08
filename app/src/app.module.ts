@@ -14,6 +14,7 @@ import { WalletModule } from './modules/wallet/wallet.module';
 import { RedisModule } from './core/redis/redis.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { VideoSlotModule } from './modules/video-slot/video-slot.module';
+import { FightingModule } from './modules/fighting/fighting.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { VideoSlotModule } from './modules/video-slot/video-slot.module';
     RedisModule.forRootAsync(),
     ChatModule,
     VideoSlotModule,
+    FightingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

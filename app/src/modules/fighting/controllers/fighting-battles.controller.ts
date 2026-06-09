@@ -12,7 +12,7 @@ import { FightingBattleRoomDto } from '../dto/responses/fighting-battle-room.dto
 import { FightingResponseMapper } from '../mappers/fighting-response.mapper';
 import { FightingBattlesService } from '../services/fighting-battles.service';
 
-@ApiTags('fighting')
+@ApiTags('Fighting')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('fighting/battles')

@@ -22,7 +22,7 @@ import { RolesGuard } from 'src/common/security/guards/roles.guard';
 import { UserRole } from '../users/enums/user-role.enum';
 import { Roles } from 'src/common/security/decorators/roles.decorator';
 
-@ApiTags('roulette')
+@ApiTags('Roulette')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('roulette')

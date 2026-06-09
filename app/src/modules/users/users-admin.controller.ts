@@ -24,7 +24,7 @@ import {
 } from '@nestjs/swagger';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 
-@ApiTags('admin/users')
+@ApiTags('Admin')
 @ApiBearerAuth()
 @Roles(UserRole.ADMIN)
 @UseGuards(JwtAuthGuard, RolesGuard)

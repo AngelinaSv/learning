@@ -14,7 +14,7 @@ import { PAYLINES_CONFIG } from './constants/video-slot.constants';
 import { SimulateRtpDto } from './dto/simulate-rtp.dto';
 import { VideoSlotMathService } from './video-slot-math.service';
 
-@ApiTags('admin/video-slots')
+@ApiTags('Admin')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN)

@@ -21,7 +21,7 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 
-@ApiTags('addresses')
+@ApiTags('Addresses')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('/addresses')

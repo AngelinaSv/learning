@@ -17,7 +17,7 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 
-@ApiTags('users')
+@ApiTags('Users')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('users')

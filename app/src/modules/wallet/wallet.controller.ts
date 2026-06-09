@@ -14,7 +14,7 @@ import { CurrentUserId } from 'src/common/security/decorators/current-user.decor
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 
-@ApiTags('wallet')
+@ApiTags('Wallets')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('wallet')
@@ -46,6 +46,7 @@ export class WalletController {
   }
 
   @Get('transactions/history')
+  @ApiTags('Transactions')
   @ApiOperation({ summary: 'Get wallet transaction history' })
   @ApiResponse({ status: 200, description: 'Returns transaction history' })
   @ApiQuery({ name: 'page', required: false, type: Number })

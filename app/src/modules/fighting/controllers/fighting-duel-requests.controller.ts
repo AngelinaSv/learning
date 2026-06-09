@@ -19,7 +19,7 @@ import { FightingDuelRequestResponseDto } from '../dto/responses/fighting-duel-r
 import { FightingResponseMapper } from '../mappers/fighting-response.mapper';
 import { FightingDuelRequestsService } from '../services/fighting-duel-requests.service';
 
-@ApiTags('fighting')
+@ApiTags('Fighting')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('fighting/duel-requests')

@@ -15,7 +15,7 @@ import { FightingProfilesService } from '../services/fighting-profiles.service';
 import { FightingProfileResponseDto } from '../dto/responses/fighting-profile-response.dto';
 import { FightingResponseMapper } from '../mappers/fighting-response.mapper';
 
-@ApiTags('fighting')
+@ApiTags('Fighting')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('fighting')

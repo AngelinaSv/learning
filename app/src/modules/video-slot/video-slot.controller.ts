@@ -20,7 +20,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PlayVideoSlotDto } from './dto/play-video-slot.dto';
 import { VideoSlotService } from './video-slot.service';
 
-@ApiTags('video-slots')
+@ApiTags('Video Slots')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('video-slots')

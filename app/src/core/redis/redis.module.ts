@@ -8,7 +8,6 @@ import {
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import Redis, { RedisOptions } from 'ioredis';
 import { REDIS_CLIENT } from './redis.constants';
-import { RedisController } from './redis.controller';
 import { RedisService } from './redis.service';
 
 @Global()
@@ -48,7 +47,7 @@ export class RedisModule {
     return {
       module: RedisModule,
       imports: [ConfigModule],
-      controllers: [RedisController],
+      controllers: [],
       providers: [redisProvider, RedisService],
       exports: [RedisService, REDIS_CLIENT],
     };

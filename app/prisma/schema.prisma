@@ -1,14 +1,230 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
 datasource db {
   provider = "postgresql"
 }
 
-generator client {
-  provider = "prisma-client-js"
-  engineType = "library",
+enum Role {
+  USER
+  MODERATOR
+  ADMIN
 }
 
-model Student {
-  id        Int      @id @default(autoincrement())
-  name      String
-  createdAt DateTime @default(now())
+model User {
+  id          String    @id @default(uuid())
+  username    String    @unique @map("username")
+  password    String    @map("password")
+  email       String    @unique @map("email")
+  isBanned    Boolean   @default(false) @map("is_banned")
+  isDeleted   Boolean   @default(false) @map("is_deleted")
+  banEndAt    DateTime? @map("ban_end_at")
+  role        Role      @default(USER)
+  lastLoginIP String?   @map("last_login_ip")
+  lastLoginAt DateTime? @default(now()) @map("last_login_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  profile      Profile?
+  addresses    Address[]
+  gameSessions GameSession[]
+  wallet       Wallet?
+  rouletteBets RouletteBet[]
+  videoSlotHistories VideoSlotHistory[]
+  fightingProfile FightingProfile?
+
+  @@index([username])
+  @@index([email])
+  @@index([createdAt])
+  @@index([lastLoginIP])
+  @@map("users")
+}
+
+model FightingProfile {
+  id           String   @id @default(uuid())
+  userId       String   @unique @map("user_id")
+  selectedHero String   @default("CYBER_NINJA") @map("selected_hero")
+  rating       Int      @default(800)
+  wins         Int      @default(0)
+  losses       Int      @default(0)
+  draws        Int      @default(0)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("fighting_profiles")
+}
+
+model Profile {
+  userId    String   @id @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  rating    Int      @map("rating")
+  avatar    String?  @map("avatar")
+  level     Int      @default(0) @map("level")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([level])
+  @@index([rating])
+  @@map("profiles")
+}
+
+model Address {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  user        User     @relation(fields: [userId], references: [id])
+  firstName   String   @map("first_name")
+  lastName    String   @map("last_name")
+  phoneNumber String   @map("phone_number")
+  address     String   @map("address")
+  address2    String?  @map("address2")
+  country     String?  @map("country")
+  postalCode  String   @map("postal_code")
+  city        String   @map("city")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([country])
+  @@index([city])
+  @@map("addresses")
+}
+
+enum GameSessionStatus {
+  ACTIVE
+  FINISHED
+}
+
+model GameSession {
+  id         String            @id @default(uuid())
+  userId     String            @map("user_id")
+  user       User              @relation(fields: [userId], references: [id])
+  serverSeed String            @map("server_seed")
+  serverHash String            @map("server_hash")
+  clientSeed String            @map("client_seed")
+  nonce      Int               @default(0)
+  status     GameSessionStatus @default(ACTIVE)
+  createdAt  DateTime          @default(now()) @map("created_at")
+  finishedAt DateTime?         @map("finished_at")
+
+  bets RouletteBet[]
+
+  @@index([userId])
+  @@map("game_sessions")
+}
+
+enum RouletteBetType {
+  NUMBER
+  COLOR
+  EVEN_ODD
+  DOZEN
+  COLUMN
+  RANGE
+}
+
+model RouletteBet {
+  id               String          @id @default(uuid())
+  userId           String          @map("user_id")
+  user             User            @relation(fields: [userId], references: [id])
+  gameSessionId    String          @map("game_session_id")
+  gameSession      GameSession     @relation(fields: [gameSessionId], references: [id])
+  betType          RouletteBetType @map("bet_type")
+  betValue         String          @map("bet_value")
+  betAmount        Decimal         @db.Decimal(18, 6)
+  winningNumber    Int             @map("winning_number")
+  winningColor     String          @map("winning_color")
+  payoutAmount     Decimal         @db.Decimal(18, 6)
+  profit           Decimal         @db.Decimal(18, 6)
+  isWin            Boolean         @map("is_win")
+  betTransactionId String          @map("bet_transaction_id")
+  winTransactionId String?         @map("win_transaction_id")
+  nonce            Int
+  createdAt        DateTime        @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([gameSessionId])
+  @@index([betTransactionId])
+  @@index([winTransactionId])
+  @@index([createdAt])
+  @@map("roulette_bets")
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  REFUND
+  BET
+  WIN
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  DISPUTED
+}
+
+model Wallet {
+  id        String   @id @default(uuid())
+  userId    String   @unique @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  balance   Decimal  @default(0) @db.Decimal(18, 6)
+  currency  String   @default("UAH")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  transactions Transaction[]
+
+  @@index([currency])
+  @@map("wallets")
+}
+
+model Transaction {
+  id             String            @id @default(uuid())
+  userId         String?           @map("user_id")
+  walletId       String            @map("wallet_id")
+  wallet         Wallet            @relation(fields: [walletId], references: [id])
+  type           TransactionType
+  status         TransactionStatus @default(PENDING)
+  amount         Decimal           @db.Decimal(18, 6)
+  idempotencyKey String?           @unique @map("idempotency_key")
+  referenceId    String?           @map("reference_id")
+  description    String?
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([walletId])
+  @@index([createdAt])
+  @@index([status])
+  @@map("transactions")
+}
+
+model VideoSlotHistory {
+  id         String   @id @default(uuid())
+  gameId     String   @unique @map("game_id")
+  userId     String   @map("user_id")
+  mode       Int
+  totalSpins Int      @map("total_spins")
+  totalBets  Decimal  @db.Decimal(18, 6) @map("total_bets")
+  totalWins  Decimal  @db.Decimal(18, 6) @map("total_wins")
+  netResult  Decimal  @db.Decimal(18, 6) @map("net_result")
+  rtp        Float
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("video_slot_history")
 }

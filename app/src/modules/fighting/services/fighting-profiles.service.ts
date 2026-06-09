@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { FightingProfile } from '@generated/prisma/client';
-import { PrismaService } from 'src/modules/prisma/prisma.service';
+import { PrismaService } from 'src/core/prisma/prisma.service';
 import {
   FIGHTING_DEFAULT_HERO_ID,
   FIGHTING_HEROES,

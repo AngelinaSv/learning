@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { RedisModule } from 'src/core/redis/redis.module';
-import { PrismaModule } from '../prisma/prisma.module';
+import { PrismaModule } from '../../core/prisma/prisma.module';
 import { WalletModule } from '../wallet/wallet.module';
 import { VideoSlotAdminController } from './video-slot-admin.controller';
 import { VideoSlotController } from './video-slot.controller';

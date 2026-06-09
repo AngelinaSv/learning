@@ -3,7 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { AddressesModule } from './modules/addresses/addresses.module';
-import { PrismaModule } from './modules/prisma/prisma.module';
+import { PrismaModule } from './core/prisma/prisma.module';
 import { RouletteModule } from './modules/roulette/roulette.module';
 import { SessionsModule } from './modules/sessions/sessions.module';
 import { ProfilesModule } from './modules/profiles/profiles.module';

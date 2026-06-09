@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../../core/prisma/prisma.service';
 import { UpdateUserByAdminDto } from './dto/update-user-by-admin.dto';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { UserResponseDto } from './dto/user-response.dto';

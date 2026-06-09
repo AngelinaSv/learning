@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import * as crypto from 'node:crypto';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../../core/prisma/prisma.service';
 import { SpinRouletteDto } from './dto/spin-roulette.dto';
 import { Prisma, RouletteBetType } from '@generated/prisma/client';
 import { BetStrategy } from './types/roulette.types';

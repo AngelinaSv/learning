@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { CommonWebsocketModule } from 'src/common/websocket';
 import { RedisModule } from 'src/core/redis/redis.module';
-import { PrismaModule } from '../prisma/prisma.module';
+import { PrismaModule } from '../../core/prisma/prisma.module';
 import { FightingBattlesController } from './controllers/fighting-battles.controller';
 import { FightingDuelRequestsController } from './controllers/fighting-duel-requests.controller';
 import { FightingProfilesController } from './controllers/fighting-profiles.controller';

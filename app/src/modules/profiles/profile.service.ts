@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { isFiniteNumber } from 'src/common/utils/number.utils';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../../core/prisma/prisma.service';
 
 @Injectable()
 export class ProfileService {

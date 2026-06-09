@@ -6,11 +6,11 @@ import {
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from '../prisma/prisma.service';
-import { UpdateUserByAdminDto } from '../admin/dto/update-user-by-admin.dto';
+import { UpdateUserByAdminDto } from './dto/update-user-by-admin.dto';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { plainToInstance } from 'class-transformer';
-import { AdminUserListResponseDto } from '../admin/dto/admin-user-list-response.dto';
+import { AdminUserListResponseDto } from './dto/admin-user-list-response.dto';
 
 @Injectable()
 export class UsersService {

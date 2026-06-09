@@ -1,13 +1,15 @@
 import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiNotFoundResponse,
+  ApiOkResponse,
   ApiOperation,
   ApiParam,
-  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/modules/auth/guards/jwt-auth.guard';
-import { FightingBattleStatusDto } from '../dto/fighting-battle-room.dto';
+import { FightingBattleRoomDto } from '../dto/responses/fighting-battle-room.dto';
+import { FightingResponseMapper } from '../mappers/fighting-response.mapper';
 import { FightingBattlesService } from '../services/fighting-battles.service';
 
 @ApiTags('fighting')
@@ -19,16 +21,20 @@ export class FightingBattlesController {
     private readonly fightingBattlesService: FightingBattlesService,
   ) {}
 
-  @Get(':id/status')
+  @Get(':id')
   @ApiOperation({ summary: 'Get fighting battle status' })
   @ApiParam({ name: 'id', description: 'Fighting battle room ID' })
-  @ApiResponse({
-    status: 200,
+  @ApiOkResponse({
     description: 'Current battle state',
-    type: FightingBattleStatusDto,
+    type: FightingBattleRoomDto,
   })
-  @ApiResponse({ status: 404, description: 'Battle not found' })
-  getStatus(@Param('id') battleId: string) {
-    return this.fightingBattlesService.getBattleStatus(battleId);
+  @ApiNotFoundResponse({ description: 'Battle not found' })
+  async getStatus(
+    @Param('id') battleId: string,
+  ): Promise<FightingBattleRoomDto> {
+    const battle =
+      await this.fightingBattlesService.getBattleRoomForApi(battleId);
+
+    return FightingResponseMapper.toBattleRoomDto(battle);
   }
 }

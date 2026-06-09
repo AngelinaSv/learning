@@ -16,7 +16,7 @@ import {
   FIGHTING_HIT_ZONES,
   FIGHTING_MOVE_TIMEOUT_MS,
 } from '../constants/fighting.constants';
-import { MakeFightingMoveDto } from '../dto/make-fighting-move.dto';
+import { MakeFightingMoveDto } from '../dto/requests/make-fighting-move.dto';
 import {
   FightingBattleFinishedEvent,
   FightingBattleMove,
@@ -93,6 +93,10 @@ export class FightingBattlesService implements OnModuleDestroy {
     const battle = await this.getBattleRoomOrThrow(battleId);
 
     return this.toBattleStatusResponse(battle);
+  }
+
+  async getBattleRoomForApi(battleId: string): Promise<FightingBattleRoom> {
+    return this.getBattleRoomOrThrow(battleId);
   }
 
   async getBattleStateForParticipant(

@@ -3,7 +3,7 @@ import { IsIn } from 'class-validator';
 import {
   FIGHTING_HERO_IDS,
   FightingHeroId,
-} from '../constants/fighting-heroes.constants';
+} from '../../constants/fighting-heroes.constants';
 
 export class SelectFightingHeroDto {
   @ApiProperty({

@@ -1,16 +1,19 @@
 import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
 import {
+  ApiBadRequestResponse,
   ApiBearerAuth,
   ApiBody,
+  ApiOkResponse,
   ApiOperation,
-  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { CurrentUserId } from 'src/common/security/decorators/current-user.decorator';
 import { JwtAuthGuard } from 'src/modules/auth/guards/jwt-auth.guard';
-import { FIGHTING_HEROES } from '../constants/fighting-heroes.constants';
-import { SelectFightingHeroDto } from '../dto/select-fighting-hero.dto';
+import { FightingHeroResponseDto } from '../dto/responses/fighting-hero-response.dto';
+import { SelectFightingHeroDto } from '../dto/requests/select-fighting-hero.dto';
 import { FightingProfilesService } from '../services/fighting-profiles.service';
+import { FightingProfileResponseDto } from '../dto/responses/fighting-profile-response.dto';
+import { FightingResponseMapper } from '../mappers/fighting-response.mapper';
 
 @ApiTags('fighting')
 @ApiBearerAuth()
@@ -23,60 +26,49 @@ export class FightingProfilesController {
 
   @Get('profile/me')
   @ApiOperation({ summary: 'Get current user fighting profile' })
-  @ApiResponse({
-    status: 200,
-    description: 'Current fighting profile with selected hero and rank',
-    schema: {
-      example: {
-        id: '0c259a20-7796-4af5-9184-1692b670bc83',
-        userId: '8b59c4c3-8c8a-45e0-a37a-7fdc7c7f3c9e',
-        selectedHero: 'CYBER_NINJA',
-        hero: FIGHTING_HEROES.CYBER_NINJA,
-        rating: 800,
-        rank: 'BRONZE',
-        wins: 0,
-        losses: 0,
-        draws: 0,
-        createdAt: '2026-06-08T10:00:00.000Z',
-        updatedAt: '2026-06-08T10:00:00.000Z',
-      },
-    },
+  @ApiOkResponse({
+    type: FightingProfileResponseDto,
   })
-  getMyProfile(@CurrentUserId() userId: string) {
-    return this.fightingProfilesService.getMyProfile(userId);
+  async getMyProfile(
+    @CurrentUserId() userId: string,
+  ): Promise<FightingProfileResponseDto> {
+    const profile = await this.fightingProfilesService.getMyProfile(userId);
+
+    return FightingResponseMapper.toProfileResponseDto(profile);
   }
 
   @Get('heroes')
   @ApiOperation({ summary: 'List available fighting heroes' })
-  @ApiResponse({
-    status: 200,
+  @ApiOkResponse({
     description: 'Config-driven fighting heroes',
-    schema: {
-      example: Object.values(FIGHTING_HEROES),
-    },
+    type: FightingHeroResponseDto,
+    isArray: true,
   })
-  getHeroes() {
-    return this.fightingProfilesService.getHeroes();
+  getHeroes(): FightingHeroResponseDto[] {
+    return this.fightingProfilesService
+      .getHeroes()
+      .map((hero) => FightingResponseMapper.toHeroResponseDto(hero));
   }
 
   @Patch('profile/me/hero')
   @ApiOperation({ summary: 'Select active fighting hero' })
   @ApiBody({
     type: SelectFightingHeroDto,
-    examples: {
-      neonSamurai: { value: { heroId: 'NEON_SAMURAI' } },
-      holoMage: { value: { heroId: 'HOLO_MAGE' } },
-    },
   })
-  @ApiResponse({
-    status: 200,
+  @ApiOkResponse({
     description: 'Updated fighting profile with selected hero',
+    type: FightingProfileResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Invalid fighting hero' })
-  selectHero(
+  @ApiBadRequestResponse({ description: 'Invalid fighting hero' })
+  async selectHero(
     @CurrentUserId() userId: string,
     @Body() dto: SelectFightingHeroDto,
-  ) {
-    return this.fightingProfilesService.selectHero(userId, dto.heroId);
+  ): Promise<FightingProfileResponseDto> {
+    const profile = await this.fightingProfilesService.selectHero(
+      userId,
+      dto.heroId,
+    );
+
+    return FightingResponseMapper.toProfileResponseDto(profile);
   }
 }

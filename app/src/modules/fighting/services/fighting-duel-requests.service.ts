@@ -10,7 +10,7 @@ import {
   FIGHTING_DUEL_REQUEST_TTL_SECONDS,
   FIGHTING_PENDING_DUEL_REQUESTS_KEY,
 } from '../constants/fighting.constants';
-import { CreateFightingDuelRequestDto } from '../dto/create-fighting-duel-request.dto';
+import { CreateFightingDuelRequestDto } from '../dto/requests/create-fighting-duel-request.dto';
 import {
   FightingDuelAcceptResult,
   FightingDuelRequest,

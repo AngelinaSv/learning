@@ -15,7 +15,7 @@ import {
   WsExceptionFilter,
   WsJwtGuard,
 } from 'src/common/websocket';
-import { MakeFightingMoveDto } from '../dto/make-fighting-move.dto';
+import { MakeFightingMoveDto } from '../dto/requests/make-fighting-move.dto';
 import { FightingBattlesService } from '../services/fighting-battles.service';
 import { FightingMatchmakingService } from '../services/fighting-matchmaking.service';
 import { FightingBattleRealtimeEvent } from '../types/fighting-battle.types';

@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsIn, IsString } from 'class-validator';
-import { FIGHTING_HIT_ZONES } from '../constants/fighting.constants';
-import { FightingHitZone } from '../types/fighting-battle.types';
+import { FIGHTING_HIT_ZONES } from '../../constants/fighting.constants';
+import { FightingHitZone } from '../../types/fighting-battle.types';
 
 export class MakeFightingMoveDto {
   @ApiProperty({

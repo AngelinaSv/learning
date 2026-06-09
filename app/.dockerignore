@@ -1,0 +1,18 @@
+# Keep local-only and generated artifacts out of Docker build contexts.
+node_modules
+dist
+build
+coverage
+generated/prisma
+*.tsbuildinfo
+
+# Do not bake local secrets into images.
+.env
+.env.*
+
+.git
+.gitignore
+.DS_Store
+.vscode
+.idea
+*.log

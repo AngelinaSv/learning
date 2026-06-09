@@ -87,7 +87,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       await this.wsJwtGuard.authenticate(client);
 
-      // TODO: expand this demo path into game-specific room membership later.
       const result = this.chatService.joinRoom(client, payload);
 
       this.trackClientRoom(client.id, result.joinedRoom);
@@ -116,7 +115,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const message = this.chatService.createRoomMessage(client, payload);
 
       // Lightweight anti-spam layer for global chat advertising/referral links.
-      // A production system would likely delegate this to a richer moderation service.
       if (this.chatModerationService.containsForbiddenContent(message.message)) {
         const blockedPayload: ChatMessageBlockedEvent = {
           reason: 'Message contains advertising or forbidden content',
@@ -133,7 +131,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         };
       }
 
-      // TODO: enforce room membership before sending when private/game rooms matter.
       this.server.to(message.room).emit('roomMessage', message);
 
       return {

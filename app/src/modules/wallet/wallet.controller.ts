@@ -56,6 +56,4 @@ export class WalletController {
   ) {
     return this.transactionService.getTransactionHistory(userId, query);
   }
-
-  // TODO: Add dispute endpoints, implement idempotency and error handling in service methods
 }

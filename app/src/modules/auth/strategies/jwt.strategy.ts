@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Role } from '@generated/prisma/client';
-// import { SessionsService } from 'src/modules/sessions/sessions.service';
 import { UsersService } from 'src/modules/users/users.service';
 
 export type JwtPayload = {
@@ -24,7 +23,6 @@ export type DecodedJwtPayload = JwtPayload & {
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     private readonly configService: ConfigService,
-    // private readonly sessionService: SessionsService,
     private readonly userService: UsersService,
   ) {
     super({
@@ -36,15 +34,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: DecodedJwtPayload) {
     const { sub: userId } = payload;
-    // const sessionExists = await this.sessionService.checkSession(
-    //   sessionId,
-    //   userId,
-    // );
-
-    // if (!sessionExists) {
-    //   throw new UnauthorizedException();
-    // }
-
     const user = await this.userService.findOne(userId);
 
     if (!user) {
@@ -58,7 +47,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     return {
       id: user.id,
       role: user.role,
-      // sessionId,
       isBanned: user.isBanned,
     };
   }

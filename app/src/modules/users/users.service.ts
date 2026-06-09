@@ -45,7 +45,6 @@ export class UsersService {
       });
     });
 
-    // TODO: mapping to UserDto
     return plainToInstance(UserResponseDto, user, {
       excludeExtraneousValues: true,
     });
@@ -126,7 +125,6 @@ export class UsersService {
     return this.prisma.user.findUnique({ where: { email } });
   }
 
-  // admin
   async findAllByAdmin(data: PaginationQueryDto) {
     const { page, limit } = data;
     const skip = (page - 1) * limit;

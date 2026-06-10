@@ -1,0 +1,12 @@
+{
+  "private": true,
+  "scripts": {
+    "docker:dev:up": "docker compose --env-file app/.env.development -f docker-compose.dev.yml up --build",
+    "docker:dev:down": "docker compose --env-file app/.env.development -f docker-compose.dev.yml down",
+    "docker:dev:logs": "docker compose --env-file app/.env.development -f docker-compose.dev.yml logs -f app postgres redis",
+    "docker:dev:build": "docker compose --env-file app/.env.development -f docker-compose.dev.yml build",
+    "docker:prod:up": "docker compose --env-file app/.env.production -f docker-compose.prod.yml up -d --build",
+    "docker:prod:down": "docker compose --env-file app/.env.production -f docker-compose.prod.yml down",
+    "docker:prod:logs": "docker compose --env-file app/.env.production -f docker-compose.prod.yml logs -f"
+  }
+}

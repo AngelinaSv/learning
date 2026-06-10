@@ -1,0 +1,19 @@
+# Ignore local development artifacts and heavy folders when building image
+node_modules
+dist
+build
+tmp
+coverage
+.cache
+.next
+.expo
+.DS_Store
+.vscode
+.idea
+.git
+.gitignore
+.log
+.env
+.env.*
+*.tsbuildinfo
+# DO NOT ignore build-related files like Dockerfile; they must be available for builds

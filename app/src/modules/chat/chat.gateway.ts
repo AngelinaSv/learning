@@ -14,6 +14,7 @@ import {
   WsExceptionFilter,
   WsJwtGuard,
 } from 'src/common/websocket';
+import { getAllowedCorsOrigins } from 'src/common/cors-origins';
 import { GLOBAL_CHAT_ROOM } from './chat.constants';
 import { ChatModerationService } from './chat-moderation.service';
 import { ChatService } from './chat.service';
@@ -27,7 +28,7 @@ import {
 @UseFilters(WsExceptionFilter)
 @WebSocketGateway({
   namespace: 'chat',
-  cors: { origin: '*' },
+  cors: { origin: getAllowedCorsOrigins(), credentials: true },
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()

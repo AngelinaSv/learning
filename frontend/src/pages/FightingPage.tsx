@@ -16,6 +16,7 @@ import { Separator } from '../components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { FIGHTING_WS_URL, getErrorMessage } from '../lib/api';
 import { getAccessToken } from '../lib/auth';
+import { createClientId } from '../lib/id';
 import { cn, formatTime } from '../lib/utils';
 import {
   FightingBattleRoom,
@@ -45,7 +46,7 @@ type FighterStatsView = {
 const zoneLabels: FightingHitZone[] = ['head', 'body', 'legs'];
 
 function newLog(message: string, tone: GameLogEntry['tone'] = 'default'): GameLogEntry {
-  return { id: crypto.randomUUID(), time: formatTime(), message, tone };
+  return { id: createClientId(), time: formatTime(), message, tone };
 }
 
 function getPlayerMax(battle: FightingBattleRoom | null, side: 'player1' | 'player2', fallbackMaxHealth?: number) {
@@ -315,7 +316,7 @@ export function FightingPage() {
     const socket = io(FIGHTING_WS_URL, {
       auth: { token },
       extraHeaders: { Authorization: `Bearer ${token}` },
-      transports: ['websocket'],
+      transports: ['polling', 'websocket'],
     });
 
     socketRef.current = socket;
@@ -326,6 +327,15 @@ export function FightingPage() {
     socket.on('disconnect', () => {
       setSocketState('offline');
       addLog('Fighting realtime disconnected.', 'muted');
+    });
+    socket.on('connect_error', (err) => {
+      console.error('Fighting socket connect_error', {
+        message: err.message,
+        url: FIGHTING_WS_URL,
+      });
+      setSocketState('offline');
+      setError(err.message || 'Unable to connect to fighting realtime.');
+      addLog(err.message || 'Unable to connect to fighting realtime.', 'danger');
     });
     socket.on('fightingMatchmakingWaiting', (payload: FightingMatchmakingWaitingEvent) => {
       setArenaState('searching');

@@ -2,19 +2,14 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common/pipes/validation.pipe';
+import { getAllowedCorsOrigins } from './common/cors-origins';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  const corsOrigins = [process.env.FRONTEND_URL];
-
-  if (process.env.NODE_ENV !== 'production') {
-    corsOrigins.push('http://localhost:5173', 'http://127.0.0.1:5173');
-  }
-
   app.enableShutdownHooks();
   app.enableCors({
-    origin: corsOrigins,
+    origin: getAllowedCorsOrigins(),
     credentials: true,
   });
 

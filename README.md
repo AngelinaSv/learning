@@ -1,138 +1,131 @@
+# Internship Casino Platform
+
 ## Project Overview
 
-A RESTful backend service built with NestJS, PostgreSQL, and Prisma ORM.
+Full-stack casino-style learning project with a NestJS backend and React frontend.
 
-The system includes:
-- Authentication with JWT (access/refresh tokens)
-- User and profile management
-- Wallet system with transactions
-- Roulette game logic
-- Global WebSocket chat
-- Lightweight chat moderation for advertising, referral links, spam invites, and obvious scam messages
-- Swagger API documentation
+The application includes authentication, wallets, roulette, video slots, realtime chat, admin user management, leaderboards, and a richer `fighting` module with heroes, profiles, duel requests, matchmaking, and websocket battles.
 
-The project is containerized using Docker and supports migration-based database schema management.
+## Live Demo Links
 
-## Project Structure
+- Frontend: <http://31.131.18.217:3000>
+- Swagger API docs: <http://31.131.18.217:3009/api>
 
+## Project Scope
+
+This project is primarily backend-focused.
+
+The main goal was to design a production-inspired backend architecture with NestJS, PostgreSQL, Prisma, Redis, REST APIs, WebSockets, JWT authentication, Swagger documentation, and Docker-based deployment. The frontend is a lightweight client for demonstrating and testing the backend features.
+
+## Tech Stack
+
+Backend:
+
+- NestJS
+- Prisma
+- PostgreSQL
+- Redis
+- Socket.IO
+- Swagger/OpenAPI
+- Docker
+
+Frontend:
+
+- React
+- Vite
+- TypeScript
+- Tailwind CSS
+- Socket.IO Client
+
+## Main Features / Modules
+
+- `auth`: user registration, login, logout, JWT auth.
+- `users`: current user profile and admin user management.
+- `wallet`: balance, deposits, withdrawals, transaction history.
+- `roulette`: roulette sessions, spins, history, rating.
+- `video-slot`: slot sessions, spins, history, RTP simulation for admins.
+- `leaderboard`: profit-based user ranking.
+- `chat`: realtime global chat with moderation.
+- `fighting`: the most complete game module in the project.
+
+## WebSockets
+
+### Chat
+
+Namespace: `/chat`
+
+Main events:
+
+- `joinRoom`
+- `sendMessage`
+- `chat:message:blocked`
+
+The chat module supports realtime room messaging and blocks obvious advertising, referral links, spam invites, and scam-style messages before broadcasting.
+
+### Fighting
+
+Namespace: `/fighting`
+
+Client events:
+
+- `findFightingOpponent`: enter matchmaking.
+- `cancelFightingMatchmaking`: leave matchmaking queue.
+- `joinFightingBattle`: join a battle room.
+- `leaveFightingBattle`: leave a battle room.
+- `makeFightingMove`: submit attack and defense zones for the current round.
+
+Server events:
+
+- `fightingMatchmakingWaiting`
+- `fightingMatchmakingCancelled`
+- `fightingMatchFound`
+- `fightingBattleState`
+- `fightingPlayerMoved`
+- `fightingRoundResult`
+- `fightingBattleFinished`
+- `fightingBattleError`
+
+## How To Run Locally
+
+Create local env files from the examples:
+
+```powershell
+copy app\.env.example app\.env.development
+copy frontend\.env.example frontend\.env.local
 ```
-app/
-├── prisma/              # Database schema and migrations
-├── src/
-│   ├── common/          # Shared utilities, guards, decorators
-│   ├── modules/
-│   │   ├── admin/       # Admin operations (user management)
-│   │   ├── addresses/   # User addresses CRUD
-│   │   ├── auth/        # Authentication (sign-up, sign-in, sign-out)
-│   │   ├── profiles/    # User profiles
-│   │   ├── roulette/    # Roulette game logic
-│   │   ├── sessions/    # Game session management
-│   │   ├── users/       # User management
-│   │   ├── wallet/      # Wallet, deposits, transactions
-│   │   ├── chat/        # Real-time chat
-│   │   ├── video-slot/  # Video slots game logic
-│   │   └── prisma/      # Prisma service
-│   ├── app.module.ts
-│   └── main.ts
-└── package.json
+
+Start the Docker development stack from the repository root:
+
+```powershell
+npm run docker:dev:up
 ```
 
-## Setup
+Useful backend commands inside the app container:
 
-### Prerequisites
-- Node.js 22+
-- Docker & Docker Compose
-
-### Running with Docker
-
-```bash
-# Start all services (app + database)
-docker compose up -d --build
-
-# View logs
-docker compose logs -f
+```powershell
+docker compose --env-file app/.env.development -f docker-compose.dev.yml exec app npm run prisma:deploy
+docker compose --env-file app/.env.development -f docker-compose.dev.yml exec app npm run prisma:seed
 ```
 
-### Database Migrations
+For local frontend development:
 
-```bash
-# Run migrations (in container)
-docker exec internship-app-1 npx prisma migrate dev
-
-# Or create new migration
-docker exec internship-app-1 npx prisma migrate dev --name migration_name
+```powershell
+cd frontend
+npm install
+npm run dev
 ```
 
-### Running Locally
+For local backend development without Docker, install dependencies in `app/`, provide PostgreSQL and Redis, set a host `DATABASE_URL`, then run:
 
-```bash
-# Development
+```powershell
+npm run prisma:generate
 npm run start:dev
-
-# Production
-npm run start:prod
 ```
 
-## API Documentation
+## Useful Links
 
-**Swagger UI:** http://localhost:3009/api
-
-## WebSocket Chat
-
-The chat module exposes a Socket.IO namespace for global casino-style chat.
-Authenticated clients are joined to the global chat room when they connect.
-
-### Chat Moderation
-
-Chat includes a lightweight anti-spam moderation layer that blocks obvious advertising, referral links, spam invites, and scam-style messages before they are saved or broadcast.
-
-This is intentionally simple and uses a local forbidden-pattern list with case-insensitive string matching. It is meant as a demo moderation layer; a production system would likely replace it with a dedicated moderation service.
-
-Currently blocked examples include:
-- `telegram`
-- `t.me`
-- `discord.gg`
-- `whatsapp`
-- `casinohack`
-- `free money`
-
-When a message is blocked, it is not broadcast to the room. Only the sender receives:
-
-```text
-chat:message:blocked
-```
-
-Payload:
-
-```json
-{
-  "reason": "Message contains advertising or forbidden content",
-  "sanitizedMessage": "Join my *** group"
-}
-```
-
-Manual test examples:
-- `Join my Telegram group` is blocked
-- `visit t.me/example` is blocked
-- `FREE MONEY here` is blocked
-- Normal chat messages continue to use the existing `roomMessage` flow
-
-## Available Scripts
-
-| Command | Description |
-|---------|-------------|
-| `npm run start` | Start production build |
-| `npm run start:dev` | Start in watch mode |
-| `npm run build` | Compile TypeScript |
-| `npm run prisma:migrate` | Run Prisma migrations |
-| `npm run prisma:generate` | Generate Prisma client |
-| `npm run prisma:seed` | Seed database |
-
-## TODOs
-
-### High Priority
-
-### Medium Priority
-
-### Low Priority
-- [ ] `admin.service.ts:28,35` - Add logs, history, notifications for admin operations
+- Local frontend: <http://localhost:3000>
+- Local API: <http://localhost:3009/api/v1>
+- Local Swagger: <http://localhost:3009/api>
+- Deployed frontend: <http://31.131.18.217:3000>
+- Deployed Swagger: <http://31.131.18.217:3009/api>

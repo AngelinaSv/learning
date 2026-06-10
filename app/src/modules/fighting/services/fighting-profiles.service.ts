@@ -83,6 +83,7 @@ export class FightingProfilesService {
       this.getOrCreateProfile(player2Id),
     ]);
 
+    // To atomically update the profile of both players.
     await this.prismaService.$transaction(async (tx) => {
       if (!winnerId) {
         await Promise.all([

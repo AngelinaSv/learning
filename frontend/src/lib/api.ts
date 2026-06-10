@@ -1,11 +1,23 @@
 import axios from 'axios';
 import { clearAuthSession, getAccessToken } from './auth';
 
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3009/api/v1';
+const BACKEND_PORT = '3009';
+
+function getBackendOrigin() {
+  if (typeof window === 'undefined') {
+    return '';
+  }
+
+  return `${window.location.protocol}//${window.location.hostname}:${BACKEND_PORT}`;
+}
+
+const backendOrigin = getBackendOrigin();
+
+export const API_URL = import.meta.env.VITE_API_URL || `${backendOrigin}/api/v1`;
 export const CHAT_WS_URL =
-  import.meta.env.VITE_CHAT_WS_URL || import.meta.env.VITE_WS_URL || 'http://localhost:3009/chat';
+  import.meta.env.VITE_CHAT_WS_URL || import.meta.env.VITE_WS_URL || `${backendOrigin}/chat`;
 export const FIGHTING_WS_URL =
-  import.meta.env.VITE_FIGHTING_WS_URL || 'http://localhost:3009/fighting';
+  import.meta.env.VITE_FIGHTING_WS_URL || `${backendOrigin}/fighting`;
 
 export const api = axios.create({
   baseURL: API_URL,

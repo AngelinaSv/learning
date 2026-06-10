@@ -45,6 +45,8 @@ export class FightingDuelRequestsService {
       JSON.stringify(request),
       FIGHTING_DUEL_REQUEST_TTL_SECONDS,
     );
+    // Request data is stored by ID, and this Redis set contains an index
+    // of currently pending requests for efficient lookup.
     await this.redisService.client.sadd(
       FIGHTING_PENDING_DUEL_REQUESTS_KEY,
       request.id,
@@ -60,6 +62,8 @@ export class FightingDuelRequestsService {
     const requests = await Promise.all(
       requestIds.map((id) => this.getDuelRequest(id)),
     );
+    // Some request keys may expire by TTL while their IDs remain in the pending set.
+    // Remove stale IDs during lookup to keep the pending index clean.
     const staleRequestIds: string[] = [];
 
     const pendingRequests = requests.flatMap((request, index) => {

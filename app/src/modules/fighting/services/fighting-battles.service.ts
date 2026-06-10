@@ -37,6 +37,9 @@ type FightingBattleEventListener = (event: FightingBattleRealtimeEvent) => void;
 export class FightingBattlesService implements OnModuleDestroy {
   private readonly logger = new Logger(FightingBattlesService.name);
   private readonly battleTimeouts = new Map<string, NodeJS.Timeout>();
+
+  // A per-battle async lock is used to serialize move processing and prevent
+  // race conditions when both players submit moves simultaneously.
   private readonly battleLocks = new Map<string, Promise<unknown>>();
   private readonly events = new EventEmitter();
 
@@ -444,6 +447,8 @@ export class FightingBattlesService implements OnModuleDestroy {
     );
   }
 
+  // To prevent abandoned battles from being stuck forever,
+  // missing player moves are generated automatically after timeout.
   private startMoveTimeout(battleId: string) {
     this.clearMoveTimeout(battleId);
 
@@ -463,6 +468,7 @@ export class FightingBattlesService implements OnModuleDestroy {
     }
   }
 
+  // This prevents duplicate round resolution and inconsistent battle state.
   private async runWithBattleLock<T>(
     battleId: string,
     action: () => Promise<T>,

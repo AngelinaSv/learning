@@ -1,4 +1,5 @@
 import { api } from '../lib/api';
+import { createClientId } from '../lib/id';
 
 export interface AccountProfile {
   level: number;
@@ -43,7 +44,7 @@ export async function getWalletBalance() {
 export async function depositToWallet(amount: number) {
   const { data } = await api.post<WalletTransaction>('/wallet/deposit', {
     amount,
-    idempotencyKey: crypto.randomUUID(),
+    idempotencyKey: createClientId(),
   });
   return data;
 }
@@ -51,7 +52,7 @@ export async function depositToWallet(amount: number) {
 export async function withdrawFromWallet(amount: number) {
   const { data } = await api.post<WalletTransaction>('/wallet/withdraw', {
     amount,
-    idempotencyKey: crypto.randomUUID(),
+    idempotencyKey: createClientId(),
   });
   return data;
 }

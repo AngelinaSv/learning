@@ -35,6 +35,8 @@ export class FightingMatchmakingService {
       };
     }
 
+    // The queue may contain stale user IDs because player records expire by TTL.
+    // Keep popping until a valid opponent record is found or the queue becomes empty.
     while (true) {
       const opponentId = await this.redisService.client.lpop(
         FIGHTING_MATCHMAKING_QUEUE_KEY,
@@ -92,6 +94,7 @@ export class FightingMatchmakingService {
         'EX',
         FIGHTING_MATCHMAKING_TTL_SECONDS,
       )
+      // Remove possible duplicates before pushing the user to the queue again.
       .lrem(FIGHTING_MATCHMAKING_QUEUE_KEY, 0, userId)
       .rpush(FIGHTING_MATCHMAKING_QUEUE_KEY, userId)
       .exec();

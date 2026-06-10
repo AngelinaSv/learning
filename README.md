@@ -2,6 +2,14 @@
 
 NestJS API with Prisma, PostgreSQL, Redis, Swagger, REST endpoints, and WebSocket-based game/chat modules.
 
+## Live Demo
+
+### Frontend
+- Application: http://31.131.18.217:3000
+
+### API Documentation
+- Swagger UI: http://31.131.18.217:3009/api
+
 ## Project Scope
 
 This project was designed primarily as a backend-focused learning project.

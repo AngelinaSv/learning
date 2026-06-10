@@ -20,9 +20,8 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiParam,
-  ApiQuery,
 } from '@nestjs/swagger';
-import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
+import { AdminUsersQueryDto } from './dto/admin-users-query.dto';
 
 @ApiTags('Admin')
 @ApiBearerAuth()
@@ -35,9 +34,7 @@ export class AdminUsersController {
   @Get()
   @ApiOperation({ summary: 'Get all users' })
   @ApiResponse({ status: 200, description: 'Returns all users' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  async findAll(@Query() data: PaginationQueryDto) {
+  async findAll(@Query() data: AdminUsersQueryDto) {
     return this.usersService.findAllByAdmin(data);
   }
 

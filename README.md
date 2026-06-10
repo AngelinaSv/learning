@@ -48,44 +48,6 @@ Frontend:
 - `chat`: realtime global chat with moderation.
 - `fighting`: the most complete game module in the project.
 
-### Fighting Module
-
-The `fighting` module combines REST endpoints, Redis-backed temporary state, PostgreSQL profiles, and Socket.IO events.
-
-Main parts:
-
-- Fighting profiles are stored in PostgreSQL and are created automatically for users.
-- Players can select one of the configured heroes: `Cyber Ninja`, `Neon Samurai`, or `Holo Mage`.
-- Each hero has battle stats: `maxHealth`, `strike`, and `blockPower`.
-- Player progress includes rating, rank, wins, losses, and draws.
-- Ranks are calculated from rating: `BRONZE`, `SILVER`, `GOLD`, `PLATINUM`, `DIAMOND`.
-- Duel requests are stored in Redis with TTL and can be public or targeted to a specific opponent.
-- Battle rooms are stored in Redis while active and for a short time after finishing.
-- Each round requires both players to submit an attack zone and defense zone: `head`, `body`, or `legs`.
-- If the attack zone matches the defender's block zone, damage is reduced by block power.
-- If a player does not move within the timeout, the backend creates an automatic random move.
-- Battle results update fighting profile stats and rating.
-
-Matchmaking is separate from duel requests. A player can enter a Redis-backed queue through WebSocket; if another valid player is already waiting, the backend immediately creates a battle room and emits match-found events to both users. If no opponent is available, the player stays in the queue until matched, cancelled, expired, or disconnected.
-
-## API Overview
-
-All REST endpoints use the global prefix `/api/v1`.
-
-| Module | Main routes |
-| --- | --- |
-| Auth | `POST /auth/sign-up`, `POST /auth/sign-in`, `POST /auth/sign-out` |
-| Users | `GET /users/me`, `PATCH /users/me`, `DELETE /users/me` |
-| Admin | `GET /admin/users`, `PATCH /admin/users/:id`, `DELETE /admin/users/:id` |
-| Wallet | `GET /wallet/balance`, `POST /wallet/deposit`, `POST /wallet/withdraw`, `GET /wallet/transactions/history` |
-| Roulette | `POST /roulette/sessions`, `GET /roulette/sessions/current`, `POST /roulette/spin`, `GET /roulette/history`, `GET /roulette/rating` |
-| Video Slots | `POST /video-slots/sessions`, `POST /video-slots/sessions/:id/spins`, `GET /video-slots/history`, `POST /admin/video-slots/simulate-rtp` |
-| Leaderboard | `GET /leaderboard` |
-| Chat | `GET /chat-system/status` |
-| Fighting | `GET /fighting/profile/me`, `GET /fighting/heroes`, `PATCH /fighting/profile/me/hero`, `POST /fighting/duel-requests`, `GET /fighting/duel-requests`, `POST /fighting/duel-requests/:id/accept`, `GET /fighting/battles/:id` |
-
-Full API documentation is available in Swagger.
-
 ## WebSockets
 
 ### Chat

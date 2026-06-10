@@ -10,6 +10,7 @@ import {
   Max,
   Min,
 } from 'class-validator';
+import { PAYLINES_CONFIG } from '../constants/video-slot.constants';
 
 export class SimulateRtpDto {
   @ApiPropertyOptional({ example: 100000 })
@@ -17,13 +18,13 @@ export class SimulateRtpDto {
   @IsInt()
   @Min(1000)
   @Max(1000000)
-  spins?: number;
+  spins: number = 100_000;
 
   @ApiPropertyOptional({ example: 100 })
   @IsOptional()
   @IsNumber()
   @Min(0.000001)
-  bet?: number;
+  bet: number = 100;
 
   @ApiPropertyOptional({
     example: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
@@ -36,10 +37,10 @@ export class SimulateRtpDto {
   @IsInt({ each: true })
   @Min(1, { each: true })
   @Max(15, { each: true })
-  lines?: number[];
+  lines: number[] = PAYLINES_CONFIG.map((line) => line.id);
 
   @ApiPropertyOptional({ example: 1, enum: [0, 1] })
   @IsOptional()
   @IsIn([0, 1])
-  mode?: number;
+  mode: number = 1;
 }

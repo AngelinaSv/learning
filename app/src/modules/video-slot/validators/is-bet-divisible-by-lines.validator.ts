@@ -4,9 +4,7 @@ import {
   ValidationOptions,
 } from 'class-validator';
 
-export function IsBetDivisibleByLines(
-  validationOptions?: ValidationOptions,
-) {
+export function IsBetDivisibleByLines(validationOptions?: ValidationOptions) {
   return (object: object, propertyName: string) => {
     registerDecorator({
       name: 'isBetDivisibleByLines',

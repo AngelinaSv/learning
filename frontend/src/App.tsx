@@ -17,6 +17,7 @@ export function App() {
       <Route path="/signup" element={<SignupPage />} />
       <Route element={<AppLayout />}>
         <Route index element={<StartPage />} />
+        <Route path="/home" element={<StartPage />} />
         <Route path="/fighting" element={<FightingPage />} />
         <Route path="/roulette" element={<RoulettePage />} />
         <Route path="/video-slots" element={<VideoSlotsPage />} />

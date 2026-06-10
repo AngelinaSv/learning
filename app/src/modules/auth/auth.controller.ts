@@ -1,4 +1,13 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { SignInDto } from './dto/sign-in.dto';
@@ -9,6 +18,8 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
+import { Response } from 'express';
+import { GoogleAuthRequest } from './types/google-auth-request.type';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -29,6 +40,22 @@ export class AuthController {
     const loggedUser = await this.authService.login(body);
 
     return loggedUser;
+  }
+
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  @ApiOperation({ summary: 'Start Google OAuth login' })
+  @ApiResponse({ status: 302, description: 'Redirects to Google login' })
+  googleLogin() {}
+
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  @ApiOperation({ summary: 'Handle Google OAuth callback' })
+  @ApiResponse({ status: 302, description: 'Redirects to frontend with token' })
+  googleCallback(@Req() req: GoogleAuthRequest, @Res() res: Response) {
+    return res.redirect(
+      this.authService.getGoogleFrontendRedirectUrl(req.user.accessToken),
+    );
   }
 
   @UseGuards(JwtAuthGuard)

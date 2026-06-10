@@ -1,5 +1,6 @@
 import { io, type Socket } from 'socket.io-client';
 import { CHAT_WS_URL } from '../lib/api';
+import { createClientId } from '../lib/id';
 
 export interface GlobalChatMessage {
   id: string;
@@ -53,7 +54,7 @@ function addMessage(message: Omit<GlobalChatMessage, 'id'>) {
   if (isSystemChatMessage(message)) return;
 
   updateState({
-    messages: [...state.messages, { ...message, id: crypto.randomUUID() }],
+    messages: [...state.messages, { ...message, id: createClientId() }],
   });
 }
 
@@ -61,7 +62,7 @@ function createSocket(token: string) {
   const nextSocket = io(CHAT_WS_URL, {
     auth: { token },
     extraHeaders: { Authorization: `Bearer ${token}` },
-    transports: ['websocket'],
+    transports: ['polling', 'websocket'],
     reconnection: true,
     reconnectionAttempts: Infinity,
     reconnectionDelay: 900,
@@ -74,6 +75,10 @@ function createSocket(token: string) {
 
   nextSocket.on('disconnect', () => updateState({ status: 'disconnected' }));
   nextSocket.on('connect_error', (err) => {
+    console.error('Global chat socket connect_error', {
+      message: err.message,
+      url: CHAT_WS_URL,
+    });
     updateState({
       status: 'disconnected',
       error: err.message || 'Unable to connect to chat.',

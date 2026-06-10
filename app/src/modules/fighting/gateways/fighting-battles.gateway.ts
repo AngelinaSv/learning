@@ -15,6 +15,7 @@ import {
   WsExceptionFilter,
   WsJwtGuard,
 } from 'src/common/websocket';
+import { getAllowedCorsOrigins } from 'src/common/cors-origins';
 import { MakeFightingMoveDto } from '../dto/requests/make-fighting-move.dto';
 import { FightingBattlesService } from '../services/fighting-battles.service';
 import { FightingMatchmakingService } from '../services/fighting-matchmaking.service';
@@ -27,7 +28,7 @@ interface FightingBattlePayload {
 @UseFilters(WsExceptionFilter)
 @WebSocketGateway({
   namespace: '/fighting',
-  cors: { origin: '*' },
+  cors: { origin: getAllowedCorsOrigins(), credentials: true },
 })
 export class FightingBattlesGateway
   implements

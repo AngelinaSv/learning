@@ -35,6 +35,14 @@ services:
     env_file:
       - ./app/.env.production
 
+  frontend:
+    build: ./frontend
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - app
+
 volumes:
   postgres_data:
   redis_data:

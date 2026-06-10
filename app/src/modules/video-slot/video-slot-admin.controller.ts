@@ -1,7 +1,6 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
-  ApiBody,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -24,19 +23,6 @@ export class VideoSlotAdminController {
 
   @Post('simulate-rtp')
   @ApiOperation({ summary: 'Simulate video slot RTP' })
-  @ApiBody({
-    type: SimulateRtpDto,
-    examples: {
-      default: {
-        value: {
-          spins: 100000,
-          bet: 100,
-          lines: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
-          mode: 1,
-        },
-      },
-    },
-  })
   @ApiResponse({ status: 201, description: 'RTP simulation result' })
   simulateRtp(@Body() dto: SimulateRtpDto) {
     const lines = dto.lines ?? PAYLINES_CONFIG.map((line) => line.id);

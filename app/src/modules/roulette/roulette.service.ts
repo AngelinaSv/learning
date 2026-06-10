@@ -5,6 +5,7 @@ import { SpinRouletteDto } from './dto/spin-roulette.dto';
 import { Prisma, RouletteBetType } from '@generated/prisma/client';
 import { BetStrategy } from './types/roulette.types';
 import { WalletService } from '../wallet/wallet.service';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import {
   isColorBet,
   isColumnBet,
@@ -208,14 +209,32 @@ export class RouletteService {
     });
   }
 
-  async getMyHistory(userId: string) {
-    return this.prisma.rouletteBet.findMany({
-      where: { userId },
-      orderBy: {
-        createdAt: 'desc',
+  async getMyHistory(userId: string, data: PaginationQueryDto) {
+    const { page, limit } = data;
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await Promise.all([
+      this.prisma.rouletteBet.findMany({
+        where: { userId },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip,
+        take: limit,
+      }),
+      this.prisma.rouletteBet.count({
+        where: { userId },
+      }),
+    ]);
+
+    return {
+      data: items,
+      meta: {
+        total,
+        page,
+        lastPage: Math.ceil(total / limit),
       },
-      take: 20,
-    });
+    };
   }
 
   async getRating() {

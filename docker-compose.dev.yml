@@ -47,6 +47,14 @@ services:
       redis:
         condition: service_healthy
 
+  frontend:
+    build: ./frontend
+    restart: always
+      ports:
+        - "3000:80"
+    depends_on:
+      - app
+
 volumes:
   postgres_dev_data:
   redis_dev_data:

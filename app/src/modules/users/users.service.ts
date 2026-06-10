@@ -7,10 +7,11 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { UpdateUserByAdminDto } from './dto/update-user-by-admin.dto';
-import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { plainToInstance } from 'class-transformer';
 import { AdminUserListResponseDto } from './dto/admin-user-list-response.dto';
+import { AdminUsersQueryDto } from './dto/admin-users-query.dto';
+import { Prisma } from '@generated/prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -125,12 +126,32 @@ export class UsersService {
     return this.prisma.user.findUnique({ where: { email } });
   }
 
-  async findAllByAdmin(data: PaginationQueryDto) {
-    const { page, limit } = data;
+  async findAllByAdmin(data: AdminUsersQueryDto) {
+    const { page, limit, search } = data;
     const skip = (page - 1) * limit;
+    const normalizedSearch = search?.trim();
+    const where: Prisma.UserWhereInput | undefined = normalizedSearch
+      ? {
+          OR: [
+            {
+              username: {
+                contains: normalizedSearch,
+                mode: 'insensitive',
+              },
+            },
+            {
+              email: {
+                contains: normalizedSearch,
+                mode: 'insensitive',
+              },
+            },
+          ],
+        }
+      : undefined;
 
     const [users, total] = await this.prisma.$transaction([
       this.prisma.user.findMany({
+        where,
         skip,
         take: limit,
         orderBy: {
@@ -142,7 +163,7 @@ export class UsersService {
         },
       }),
 
-      this.prisma.user.count(),
+      this.prisma.user.count({ where }),
     ]);
 
     return {

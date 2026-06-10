@@ -5,10 +5,12 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@generated/prisma/client';
 import { randomUUID } from 'node:crypto';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { RedisService } from 'src/core/redis/redis.service';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { WalletService } from '../wallet/wallet.service';
 import { PlayVideoSlotDto } from './dto/play-video-slot.dto';
+import { StartVideoSlotDto } from './dto/start-video-slot.dto';
 import { VideoSlotMathService } from './video-slot-math.service';
 import {
   PAYLINES_CONFIG,
@@ -26,7 +28,7 @@ export class VideoSlotService {
     private readonly mathService: VideoSlotMathService,
   ) {}
 
-  async initializeGameSession(userId: string) {
+  async initializeGameSession(userId: string, dto: StartVideoSlotDto = {}) {
     const key = this.getSessionKey(userId);
     const activeSession = await this.redisService.get(key);
 
@@ -37,7 +39,7 @@ export class VideoSlotService {
     const session: VideoSlotSession = {
       gameId: randomUUID(),
       userId,
-      mode: 1,
+      mode: dto.mode ?? 1,
       totalSpins: 0,
       totalBets: '0',
       totalWins: '0',
@@ -161,12 +163,30 @@ export class VideoSlotService {
     });
   }
 
-  async getMyHistory(userId: string) {
-    return this.prisma.videoSlotHistory.findMany({
-      where: { userId },
-      orderBy: { createdAt: 'desc' },
-      take: 20,
-    });
+  async getMyHistory(userId: string, data: PaginationQueryDto) {
+    const { page, limit } = data;
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await Promise.all([
+      this.prisma.videoSlotHistory.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.videoSlotHistory.count({
+        where: { userId },
+      }),
+    ]);
+
+    return {
+      data: items,
+      meta: {
+        total,
+        page,
+        lastPage: Math.ceil(total / limit),
+      },
+    };
   }
 
   private validateLines(lines: number[]) {

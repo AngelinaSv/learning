@@ -24,12 +24,6 @@ import {
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  // @Get('')
-  // @ApiOperation({ summary: 'Get public users list' })
-  // @ApiResponse({ status: 200, description: 'Returns the current user' })
-  //   return this.usersService.getUsersList();
-  // }
-
   @Get('me')
   @ApiOperation({ summary: 'Get current user' })
   @ApiResponse({ status: 200, description: 'Returns the current user' })

@@ -6,6 +6,7 @@ import {
   UseGuards,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { RouletteService } from './roulette.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -17,10 +18,12 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiParam,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { RolesGuard } from 'src/common/security/guards/roles.guard';
 import { UserRole } from '../users/enums/user-role.enum';
 import { Roles } from 'src/common/security/decorators/roles.decorator';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 
 @ApiTags('Roulette')
 @ApiBearerAuth()
@@ -73,8 +76,10 @@ export class RouletteController {
   @Get('history')
   @ApiOperation({ summary: 'Get roulette history' })
   @ApiResponse({ status: 200, description: 'Returns roulette history' })
-  history(@CurrentUserId() userId: string) {
-    return this.rouletteService.getMyHistory(userId);
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  history(@CurrentUserId() userId: string, @Query() query: PaginationQueryDto) {
+    return this.rouletteService.getMyHistory(userId, query);
   }
 
   @Get('rating')

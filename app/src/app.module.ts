@@ -12,6 +12,7 @@ import { RedisModule } from './core/redis/redis.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { VideoSlotModule } from './modules/video-slot/video-slot.module';
 import { FightingModule } from './modules/fighting/fighting.module';
+import { LeaderboardModule } from './modules/leaderboard/leaderboard.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { FightingModule } from './modules/fighting/fighting.module';
     ChatModule,
     VideoSlotModule,
     FightingModule,
+    LeaderboardModule,
   ],
   controllers: [],
   providers: [],

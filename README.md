@@ -40,6 +40,7 @@ Frontend:
 ## Main Features / Modules
 
 - `auth`: email/password authentication, Google OAuth 2.0 login, JWT-based authorization.
+
 Google OAuth is implemented and configured for local development. Production OAuth requires a registered HTTPS domain and matching redirect URI in Google Cloud Console.
 - `users`: current user profile and admin user management.
 - `wallet`: balance, deposits, withdrawals, transaction history.

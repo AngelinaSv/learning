@@ -12,6 +12,8 @@ import { plainToInstance } from 'class-transformer';
 import { AdminUserListResponseDto } from './dto/admin-user-list-response.dto';
 import { AdminUsersQueryDto } from './dto/admin-users-query.dto';
 import { Prisma } from '@generated/prisma/client';
+import { randomUUID } from 'node:crypto';
+import { CreateOAuthUserData } from './types/create-oauth-user-data.type';
 
 @Injectable()
 export class UsersService {
@@ -48,6 +50,33 @@ export class UsersService {
 
     return plainToInstance(UserResponseDto, user, {
       excludeExtraneousValues: true,
+    });
+  }
+
+  async createOAuthUser(data: CreateOAuthUserData) {
+    const username = await this.getUniqueUsername(data.username);
+
+    return this.prisma.user.create({
+      data: {
+        email: data.email,
+        password: data.password,
+        username,
+        profile: {
+          create: {
+            rating: 0,
+            level: 0,
+            avatar: data.avatar,
+          },
+        },
+        wallet: {
+          create: {
+            balance: 0,
+          },
+        },
+      },
+      include: {
+        profile: true,
+      },
     });
   }
 
@@ -200,5 +229,25 @@ export class UsersService {
     });
 
     return updatedUser;
+  }
+
+  private async getUniqueUsername(baseUsername: string): Promise<string> {
+    const normalizedBase = baseUsername || 'google_user';
+    let username = normalizedBase;
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const existingUser = await this.prisma.user.findUnique({
+        where: { username },
+        select: { id: true },
+      });
+
+      if (!existingUser) {
+        return username;
+      }
+
+      username = `${normalizedBase}_${randomUUID().slice(0, 8)}`;
+    }
+
+    return `google_user_${randomUUID()}`;
   }
 }

@@ -39,7 +39,7 @@ Frontend:
 
 ## Main Features / Modules
 
-- `auth`: user registration, login, logout, JWT auth.
+- `auth`: email/password authentication, Google OAuth 2.0 login, JWT-based authorization.
 - `users`: current user profile and admin user management.
 - `wallet`: balance, deposits, withdrawals, transaction history.
 - `roulette`: roulette sessions, spins, history, rating.

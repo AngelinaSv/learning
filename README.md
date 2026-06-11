@@ -8,8 +8,8 @@ The application includes authentication, wallets, roulette, video slots, realtim
 
 ## Live Demo Links
 
-- Frontend: <http://31.131.18.217:3000>
-- Swagger API docs: <http://31.131.18.217:3009/api>
+- Frontend: <https://neonrealms.duckdns.org/>
+- Swagger API docs: <https://neonrealms.duckdns.org/api>
 
 ## Project Scope
 
@@ -40,8 +40,6 @@ Frontend:
 ## Main Features / Modules
 
 - `auth`: email/password authentication, Google OAuth 2.0 login, JWT-based authorization.
-
-Google OAuth is implemented and configured for local development. Production OAuth requires a registered HTTPS domain and matching redirect URI in Google Cloud Console.
 - `users`: current user profile and admin user management.
 - `wallet`: balance, deposits, withdrawals, transaction history.
 - `roulette`: roulette sessions, spins, history, rating.
@@ -129,5 +127,5 @@ npm run start:dev
 - Local frontend: <http://localhost:3000>
 - Local API: <http://localhost:3009/api/v1>
 - Local Swagger: <http://localhost:3009/api>
-- Deployed frontend: <http://31.131.18.217:3000>
-- Deployed Swagger: <http://31.131.18.217:3009/api>
+- Deployed frontend: <https://neonrealms.duckdns.org/>
+- Deployed Swagger: <https://neonrealms.duckdns.org/api>

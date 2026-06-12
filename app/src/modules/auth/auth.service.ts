@@ -148,7 +148,7 @@ export class AuthService {
       .replace(/^_|_$/g, '')
       .slice(0, 24);
 
-    return username || 'google_user';
+    return username || `user_${randomUUID().slice(0, 8)}`;
   }
 
   private buildAuthResponse(user: User): AuthResponse {

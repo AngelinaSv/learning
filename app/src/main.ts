@@ -4,6 +4,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common/pipes/validation.pipe';
 import { getAllowedCorsOrigins } from './common/cors-origins';
 import helmet from 'helmet';
+import { ConfigService } from '@nestjs/config/dist/config.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -14,9 +15,11 @@ async function bootstrap() {
     }),
   );
 
+  const configService = app.get(ConfigService);
+
   app.enableShutdownHooks();
   app.enableCors({
-    origin: getAllowedCorsOrigins(),
+    origin: getAllowedCorsOrigins(configService),
     credentials: true,
   });
 

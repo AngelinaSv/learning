@@ -5,6 +5,7 @@
       "es2023"
     ],
     "module": "CommonJS",
+    "strictBindCallApply": true,
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,

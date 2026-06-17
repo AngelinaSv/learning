@@ -3,9 +3,16 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common/pipes/validation.pipe';
 import { getAllowedCorsOrigins } from './common/cors-origins';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+    }),
+  );
 
   app.enableShutdownHooks();
   app.enableCors({
